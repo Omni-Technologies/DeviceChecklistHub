@@ -1,0 +1,1094 @@
+<!-- index.html -->
+<!DOCTYPE html>
+<html lang="en" class="scroll-smooth">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Omni Checklist Hub</title>
+    
+    <!-- PWA & SEO Meta -->
+    <meta name="description" content="Omni Technologies Device Checklist Hub for fire-alarm inspections.">
+    <meta name="theme-color" content="#1e293b">
+    <link rel="manifest" href="data:application/manifest+json;base64,ew0KICAibmFtZSI6ICJPbW5pIENoZWNrbGlzdCBIdWIiLA0KICAic2hvcnRfbmFtZSI6ICJPbW5pSHViIiwNCiAgImRlc2NyaXB0aW9uIjogIkRldmljZSBDaGVja2xpc3QgSHViIGZvciBmaXJlLWFsYXJtIGluc3BlY3Rpb25zLiIsDQogICJpY29ucyI6IFsNCiAgICB7DQogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbDsvP3htbCB2ZXJzaW9uPSIxLjAiIHN0YW5kYWxvbmU9Im5vIj8+PHN2ZyB3aWR0aD0iMTkyIiBoZWlnaHQ9IjE5MiIgdmlld0JveD0iMCAwIDE5MiAxOTIiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjE5MiIgaGVpZ2h0PSIxOTIiIHN0eWxlPSJmaWxsOiMxZTI5M2I7Ii8+PHRleHQgeD0iNTAlIiB5PSI1MCUiIGRvbWluYW50LWJhc2VsaW5lPSJjZW50cmFsIiB0ZXh0LWFuY2hvcj0ibWlkZGxlIiBmb250LXNpemU9IjE0MCIgZmlsbD0iI2ZmZiI+4pyUPC90ZXh0Pjwvc3ZnPg0KICAgICAgIiwNCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwNCiAgICAgICJ0eXBlIjogImltYWdlL3N2ZyI0KICAgIH0sDQogICAgew0KICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWw7Lz84bWwgdmVyc2lvbj0iMS4wIiBzdGFuZGFsb25lPSJubyI/Pjxzdmcgd2lkdGg9IjUxMiIgaGVpZ2h0PSI1MTIiIHZpZXdCb3g9IjAgMCA1MTIgNTEyIiB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciPjxyZWN0IHdpZHRoPSI1MTIiIGhlaWdodD0iNTEyIiBzdHlsZT0iZmlsbDojMWUyOTNiOyIvPjx0ZXh0IHg9IjUwJSIgeT0iNTAlIiBkb21pbmFudC1iYXNlbGluZT0iY2VudHJhbCIgdGV4dC1hbmNob3I9Im1pZGRsZSIgZm9udC1zaXplPSIzODQiIGZpbGw9IiNmZmYiPuKclDwvdGV4dD48L3N2Zz4NCiAgICAgICIsDQogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsDQogICAgICAidHlwZSI6ICJpbWFnZS9zdmciDQogICAgfQ0KICBdLA0KICAic3RhcnRfdXJsIjogIi4iLA0KICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwNCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzFlMjkzYiINCn0NCg==">
+    
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        darkMode: 'media',
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ['Inter', 'sans-serif'],
+            },
+            colors: {
+              slate: {
+                850: '#17202e',
+              }
+            }
+          }
+        }
+      }
+    </script>
+    
+    <!-- Custom Styles -->
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      body { 
+        font-family: 'Inter', sans-serif;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+      }
+      /* For custom focus rings and other small adjustments */
+      .focus-ring { @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500; }
+      [aria-expanded="true"] > .accordion-arrow { transform: rotate(180deg); }
+      .table-header-sortable:hover { @apply bg-slate-700; }
+      .table-header-sortable svg { opacity: 0.3; }
+      .table-header-sortable[aria-sort] svg { opacity: 1; }
+      /* Animate row into completed list */
+      .row-enter {
+        opacity: 0;
+        transform: translateY(-10px);
+        transition: opacity 300ms ease-out, transform 300ms ease-out;
+      }
+      .row-enter-active {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    </style>
+</head>
+<body class="bg-slate-100 dark:bg-slate-850 text-slate-800 dark:text-slate-200">
+
+    <div id="app-container" class="relative min-h-screen">
+        
+        <!-- Header -->
+        <header class="bg-white/75 dark:bg-slate-900/75 backdrop-blur-sm sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800">
+            <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
+                <div class="flex items-center justify-between h-16">
+                    <div class="flex items-center">
+                        <span class="text-2xl font-bold text-sky-600 dark:text-sky-500">✅</span>
+                        <h1 class="ml-3 text-xl font-bold tracking-tight">Omni Checklist Hub</h1>
+                    </div>
+                    <div class="flex items-center space-x-4">
+                      <admin-controls></admin-controls>
+                    </div>
+                </div>
+                 <!-- Mobile Building Picker (becomes visible via JS) -->
+                <div id="mobile-building-picker-container" class="sm:hidden pb-4"></div>
+            </div>
+        </header>
+
+        <!-- Main Content -->
+        <main class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
+            <div class="flex flex-col sm:flex-row gap-8">
+                <!-- Checklist Workspace -->
+                <div id="checklist-workspace" class="flex-grow">
+                    <!-- This will be populated with the checklist-workspace component -->
+                     <div id="welcome-message" class="text-center py-20">
+                        <h2 class="text-2xl font-semibold text-slate-600 dark:text-slate-400">Welcome, Inspector!</h2>
+                        <p class="mt-2 text-slate-500">Please select a building from the list to begin.</p>
+                        <p class="mt-1 text-sm text-slate-400 dark:text-slate-500">If the list is empty, an administrator may need to upload a checklist.</p>
+                    </div>
+                </div>
+
+                <!-- Desktop Building Picker Sidebar -->
+                <aside id="desktop-building-picker-container" class="hidden sm:block sm:w-64 md:w-72 lg:w-80 flex-shrink-0">
+                    <!-- This will be populated with the building-picker component -->
+                </aside>
+            </div>
+        </main>
+
+        <!-- Toasts/Notifications Container -->
+        <div id="toast-container" aria-live="assertive" aria-atomic="true" class="fixed bottom-0 right-0 p-4 sm:p-6 space-y-3 z-50 w-full max-w-sm">
+            <!-- Toasts will be injected here -->
+        </div>
+
+    </div>
+
+    <!-- Service Worker Script (inlined) -->
+    <script type="text/javascript" id="sw">
+        const CACHE_NAME = 'omni-checklist-hub-v1';
+        const GITHUB_API_CACHE_NAME = 'github-api-cache-v1';
+        const GITHUB_API_URL_PREFIX = 'https://api.github.com/repos/';
+        const CHECKLIST_CACHE_NAME = 'checklist-json-cache-v1';
+        const MAX_CHECKLISTS_TO_CACHE = 5;
+
+        // Assets to cache on installation
+        const PRECACHE_ASSETS = [
+            '/', // Alias for index.html
+        ];
+
+        self.addEventListener('install', event => {
+            event.waitUntil(
+                caches.open(CACHE_NAME)
+                    .then(cache => cache.addAll(PRECACHE_ASSETS))
+                    .then(self.skipWaiting())
+            );
+        });
+
+        self.addEventListener('activate', event => {
+            // Clean up old caches
+            const currentCaches = [CACHE_NAME, GITHUB_API_CACHE_NAME, CHECKLIST_CACHE_NAME];
+            event.waitUntil(
+                caches.keys().then(cacheNames => {
+                    return Promise.all(
+                        cacheNames.map(cacheName => {
+                            if (!currentCaches.includes(cacheName)) {
+                                return caches.delete(cacheName);
+                            }
+                        })
+                    );
+                }).then(() => self.clients.claim())
+            );
+        });
+
+        self.addEventListener('fetch', event => {
+            const { request } = event;
+
+            // Handle GitHub API requests for the list of devices
+            if (request.url.startsWith(GITHUB_API_URL_PREFIX) && request.url.endsWith('/devices')) {
+                event.respondWith(staleWhileRevalidate(request, GITHUB_API_CACHE_NAME, 300)); // 5 min TTL
+                return;
+            }
+
+            // Handle checklist JSON file requests
+            if (request.url.endsWith('.json') && request.url.includes('/devices/')) {
+                event.respondWith(cacheFirstWithLRU(request, CHECKLIST_CACHE_NAME));
+                return;
+            }
+
+            // Handle navigation requests (e.g., the main page)
+            if (request.mode === 'navigate') {
+                 event.respondWith(
+                    caches.match(request)
+                        .then(cachedResponse => {
+                            if (cachedResponse) {
+                                return cachedResponse;
+                            }
+                            return fetch(request);
+                        })
+                );
+                return;
+            }
+
+            // For other requests, just fetch from network
+            event.respondWith(fetch(request));
+        });
+
+        // Stale-while-revalidate strategy with TTL
+        async function staleWhileRevalidate(request, cacheName, ttlSeconds) {
+            const cache = await caches.open(cacheName);
+            const cachedResponse = await cache.match(request);
+            const fetchedResponsePromise = fetch(request).then(networkResponse => {
+                const responseClone = networkResponse.clone();
+                const headers = new Headers(responseClone.headers);
+                headers.append('X-Cached-Time', Date.now());
+                cache.put(request, new Response(responseClone.body, {
+                  status: responseClone.status,
+                  statusText: responseClone.statusText,
+                  headers: headers
+                }));
+                return networkResponse;
+            });
+
+            if (cachedResponse) {
+                 const cachedTime = cachedResponse.headers.get('X-Cached-Time');
+                 if (cachedTime && (Date.now() - cachedTime) < (ttlSeconds * 1000)) {
+                    return cachedResponse;
+                 }
+            }
+            
+            return cachedResponse || fetchedResponsePromise;
+        }
+
+        // Cache-first strategy for JSON checklists with an LRU-like eviction policy
+        async function cacheFirstWithLRU(request, cacheName) {
+            const cache = await caches.open(cacheName);
+            const cachedResponse = await cache.match(request);
+            
+            if (cachedResponse) {
+                // "Touch" the cache entry by re-adding it to update its position
+                await cache.put(request, cachedResponse.clone());
+                return cachedResponse;
+            }
+
+            const networkResponse = await fetch(request);
+            if(networkResponse.ok) {
+                await cache.put(request, networkResponse.clone());
+                // Eviction logic
+                const keys = await cache.keys();
+                if (keys.length > MAX_CHECKLISTS_TO_CACHE) {
+                    await cache.delete(keys[0]); // Delete the oldest entry
+                }
+            }
+            return networkResponse;
+        }
+
+    </script>
+    
+    <!-- Main Application Logic -->
+    <script type="module">
+        // --- CONFIGURATION ---
+        const GITHUB_OWNER = "Omni-Technologies";       // ← UPDATED
+        const GITHUB_REPO = "DeviceChecklistHub";        // ← UPDATED
+        const PAT_SCOPES = "repo:contents";          // Personal-Access-Token scope
+        const ADMIN_EMAIL = "admin@omnitech.com";     // For “Contact admin” link
+
+        // --- UTILITIES ---
+        const $ = (selector, parent = document) => parent.querySelector(selector);
+        const $$ = (selector, parent = document) => parent.querySelectorAll(selector);
+
+        /**
+         * Simple debounce function
+         */
+        function debounce(func, delay = 250) {
+            let timeoutId;
+            return (...args) => {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => {
+                    func.apply(this, args);
+                }, delay);
+            };
+        }
+
+        /**
+         * Sanitizes string to prevent XSS.
+         */
+        function escapeHTML(str) {
+            const p = document.createElement('p');
+            p.textContent = str;
+            return p.innerHTML;
+        }
+
+        /**
+         * Shows a toast notification.
+         */
+        function showToast(message, type = 'info') {
+            const container = $('#toast-container');
+            if (!container) return;
+
+            const toastId = `toast-${Date.now()}`;
+            const colors = {
+                success: 'bg-green-500 dark:bg-green-600',
+                error: 'bg-red-500 dark:bg-red-600',
+                info: 'bg-sky-500 dark:bg-sky-600',
+            };
+
+            const toast = document.createElement('div');
+            toast.id = toastId;
+            toast.className = `transform transition-all duration-300 ease-out translate-y-4 opacity-0 p-4 rounded-lg shadow-lg text-white ${colors[type] || colors.info}`;
+            toast.setAttribute('role', 'alert');
+            toast.innerHTML = `<p class="font-semibold">${escapeHTML(message)}</p>`;
+            
+            container.appendChild(toast);
+            
+            // Animate in
+            requestAnimationFrame(() => {
+                toast.classList.remove('translate-y-4', 'opacity-0');
+            });
+
+            setTimeout(() => {
+                toast.classList.add('opacity-0', 'translate-x-full');
+                toast.addEventListener('transitionend', () => toast.remove());
+            }, 5000);
+        }
+
+        /**
+         * Validates a checklist JSON object against the required schema.
+         */
+        function validateChecklist(json) {
+            if (!json || typeof json !== 'object') throw new Error("Invalid JSON format.");
+            if (typeof json.projectName !== 'string' || !json.projectName.trim()) throw new Error("Missing or invalid 'projectName'.");
+            if (!Array.isArray(json.devices)) throw new Error("Missing or invalid 'devices' array.");
+            
+            for (const device of json.devices) {
+                const requiredKeys = ['loop', 'address', 'model', 'deviceType', 'serialNumber', 'messages'];
+                for (const key of requiredKeys) {
+                    if (device[key] === undefined || device[key] === null) throw new Error(`Device missing required key: '${key}'.`);
+                }
+            }
+            return true;
+        }
+        
+        // --- GITHUB API CLIENT ---
+        class GitHubClient {
+            constructor() {
+                this.baseUrl = `https://api.github.com/repos/${GITHUB_OWNER}/${GITHUB_REPO}`;
+                this.token = sessionStorage.getItem('github_pat');
+            }
+
+            getHeaders() {
+                const headers = { 'Accept': 'application/vnd.github.v3+json' };
+                if (this.token) {
+                    headers['Authorization'] = `token ${this.token}`;
+                }
+                return headers;
+            }
+
+            async fetchJson(url, options = {}) {
+                try {
+                    const response = await fetch(url, { ...options, headers: this.getHeaders() });
+                    if (response.status === 204 || response.status === 201) return null; // No content or created
+                    if (!response.ok) {
+                        const errorData = await response.json().catch(() => ({ message: 'Unknown API error' }));
+                        throw new Error(`GitHub API Error (${response.status}): ${errorData.message}`);
+                    }
+                    if (response.headers.get('Content-Length') === '0') return null;
+                    return await response.json();
+                } catch(e) {
+                     if (e.message.includes('Failed to fetch')) {
+                        throw new Error("Network error. The application might be offline.");
+                    }
+                    throw e;
+                }
+            }
+
+            async getBuildingList() {
+                const data = await this.fetchJson(`${this.baseUrl}/contents/devices?ref=main`);
+                if (!Array.isArray(data)) return [];
+                return data
+                    .filter(item => item.name.toLowerCase().endsWith('.json'))
+                    .map(item => ({ name: item.name.replace(/\.json$/i, ''), path: item.path, sha: item.sha, url: item.download_url }));
+            }
+
+            async getBuildingChecklist(url) {
+                const response = await fetch(url);
+                 if (!response.ok) throw new Error(`Failed to download checklist: ${response.statusText}`);
+                const json = await response.json();
+                validateChecklist(json);
+                return json;
+            }
+
+            async uploadChecklist({ fileName, fileContent, message, sha }) {
+                if (!this.token) throw new Error("Admin login required for uploads.");
+                const content = btoa(unescape(encodeURIComponent(fileContent))); // Correctly encode UTF-8 before Base64
+                const url = `${this.baseUrl}/contents/devices/${fileName}.json`;
+                const body = {
+                    message: message,
+                    content: content,
+                    branch: "main"
+                };
+                if (sha) {
+                    body.sha = sha;
+                }
+                await this.fetchJson(url, { method: 'PUT', body: JSON.stringify(body) });
+            }
+        }
+
+        // --- WEB COMPONENTS ---
+        
+        /**
+         * AdminControls Component: Handles login/logout and shows the upload panel.
+         */
+        class AdminControls extends HTMLElement {
+            constructor() {
+                super();
+                this.github = new GitHubClient();
+                this.isLoggedIn = !!this.github.token;
+            }
+
+            connectedCallback() {
+                this.render();
+                this.attachEventListeners();
+            }
+
+            render() {
+                this.innerHTML = `
+                    <div id="admin-area" class="flex items-center space-x-2">
+                        ${this.isLoggedIn ? `
+                            <button id="upload-btn" class="text-sm font-semibold text-sky-600 dark:text-sky-500 hover:text-sky-700 dark:hover:text-sky-400 focus-ring rounded-md px-3 py-2">Upload New</button>
+                            <button id="logout-btn" class="text-sm font-semibold text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 focus-ring rounded-md px-3 py-2">Logout</button>
+                        ` : `
+                            <a href="mailto:${ADMIN_EMAIL}" class="text-sm font-medium text-slate-500 hover:text-slate-700 dark:hover:text-slate-300">Contact Admin</a>
+                            <button id="login-btn" class="text-sm font-semibold text-sky-600 dark:text-sky-500 hover:text-sky-700 dark:hover:text-sky-400 focus-ring rounded-md px-3 py-2">
+                                <span role="img" aria-hidden="true">🔒</span> Admin Login
+                            </button>
+                        `}
+                    </div>
+                    ${this.isLoggedIn ? '<upload-panel class="mt-4"></upload-panel>' : ''}
+                `;
+            }
+
+            attachEventListeners() {
+                $('#login-btn', this)?.addEventListener('click', () => this.handleLogin());
+                $('#logout-btn', this)?.addEventListener('click', () => this.handleLogout());
+                $('#upload-btn', this)?.addEventListener('click', () => {
+                    const panel = $('upload-panel');
+                    if(panel) panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+                });
+            }
+
+            handleLogin() {
+                const token = prompt(`Please enter your GitHub Personal Access Token.\nRequired scope: ${PAT_SCOPES}`);
+                if (token) {
+                    sessionStorage.setItem('github_pat', token.trim());
+                    this.isLoggedIn = true;
+                    this.github.token = token.trim();
+                    this.render();
+                    this.attachEventListeners();
+                    showToast('Admin login successful.', 'success');
+                }
+            }
+
+            handleLogout() {
+                sessionStorage.removeItem('github_pat');
+                this.isLoggedIn = false;
+                this.github.token = null;
+                this.render();
+                this.attachEventListeners();
+                showToast('You have been logged out.');
+            }
+        }
+        customElements.define('admin-controls', AdminControls);
+
+        /**
+         * UploadPanel Component: A form to upload new checklist files.
+         */
+        class UploadPanel extends HTMLElement {
+            constructor() {
+                super();
+                this.github = new GitHubClient();
+                this.buildingList = []; // To check for overwrites
+            }
+
+            connectedCallback() {
+                this.style.display = 'none'; // Initially hidden
+                this.render();
+                this.attachEventListeners();
+                document.addEventListener('buildings-loaded', (e) => {
+                    this.buildingList = e.detail;
+                });
+            }
+
+            render() {
+                this.innerHTML = `
+                    <form id="upload-form" class="bg-slate-100 dark:bg-slate-800 p-4 rounded-lg border border-slate-200 dark:border-slate-700">
+                        <h3 class="font-semibold mb-3">Upload Checklist</h3>
+                        <div class="space-y-4">
+                            <div>
+                                <label for="building-name" class="block text-sm font-medium text-slate-600 dark:text-slate-300">Friendly Building Name</label>
+                                <input type="text" id="building-name" name="building-name" required class="mt-1 block w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                            </div>
+                            <div>
+                                <label for="json-file" class="block text-sm font-medium text-slate-600 dark:text-slate-300">JSON File</label>
+                                <input type="file" id="json-file" name="json-file" accept=".json" required class="mt-1 block w-full text-sm text-slate-500 file:mr-4 file:py-2 file:px-4 file:rounded-md file:border-0 file:text-sm file:font-semibold file:bg-sky-50 dark:file:bg-sky-900/50 file:text-sky-700 dark:file:text-sky-300 hover:file:bg-sky-100 dark:hover:file:bg-sky-900">
+                            </div>
+                            <button type="submit" class="w-full bg-sky-600 hover:bg-sky-700 text-white font-bold py-2 px-4 rounded-md focus-ring flex items-center justify-center">
+                                <span id="upload-spinner" class="hidden animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></span>
+                                Upload
+                            </button>
+                        </div>
+                    </form>
+                `;
+            }
+
+            attachEventListeners() {
+                $('#upload-form', this).addEventListener('submit', (e) => this.handleUpload(e));
+            }
+
+            async handleUpload(event) {
+                event.preventDefault();
+                const form = event.target;
+                const button = form.querySelector('button[type="submit"]');
+                const spinner = $('#upload-spinner', button);
+                const buildingName = form.elements['building-name'].value.trim();
+                const file = form.elements['json-file'].files[0];
+
+                if (!buildingName || !file) {
+                    showToast('Both name and file are required.', 'error');
+                    return;
+                }
+
+                button.disabled = true;
+                spinner.classList.remove('hidden');
+
+                try {
+                    const fileContent = await file.text();
+                    const jsonContent = JSON.parse(fileContent);
+                    validateChecklist(jsonContent);
+
+                    const fileName = buildingName.replace(/\s+/g, '');
+                    const existingFile = this.buildingList.find(b => b.name.toLowerCase() === fileName.toLowerCase());
+                    const message = existingFile ? `Update ${fileName}.json` : `Create ${fileName}.json`;
+                    const sha = existingFile ? existingFile.sha : undefined;
+                    
+                    if (existingFile && !confirm(`A checklist named "${fileName}" already exists. Overwrite it?`)) {
+                        throw new Error("Upload cancelled by user.");
+                    }
+
+                    await this.github.uploadChecklist({ fileName, fileContent, message, sha });
+                    showToast(`Checklist "${buildingName}" uploaded successfully.`, 'success');
+                    form.reset();
+                    document.dispatchEvent(new CustomEvent('checklist-uploaded'));
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    console.error('Upload failed:', error);
+                } finally {
+                    button.disabled = false;
+                    spinner.classList.add('hidden');
+                }
+            }
+        }
+        customElements.define('upload-panel', UploadPanel);
+        
+        /**
+         * BuildingPicker Component: Shows list of buildings as select or sidebar.
+         */
+        class BuildingPicker extends HTMLElement {
+            constructor() {
+                super();
+                this.isMobile = window.innerWidth < 640;
+                this.buildings = [];
+                this.github = new GitHubClient();
+            }
+
+            connectedCallback() {
+                this.render();
+                this.fetchBuildings();
+                window.addEventListener('resize', debounce(() => this.handleResize(), 200));
+                document.addEventListener('checklist-uploaded', () => this.fetchBuildings());
+            }
+
+            async fetchBuildings() {
+                const listContainer = $('#building-list', this) || this;
+                listContainer.innerHTML = '<p class="text-sm text-slate-400 p-4">Loading buildings...</p>';
+                try {
+                    this.buildings = await this.github.getBuildingList();
+                    document.dispatchEvent(new CustomEvent('buildings-loaded', { detail: this.buildings }));
+                    this.render();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    listContainer.innerHTML = `<p class="text-sm text-red-500 p-4">${escapeHTML(error.message)}</p>`;
+                    console.error("Failed to fetch buildings:", error);
+                }
+            }
+
+            render() {
+                const containerId = this.isMobile ? '#mobile-building-picker-container' : '#desktop-building-picker-container';
+                const otherContainerId = this.isMobile ? '#desktop-building-picker-container' : '#mobile-building-picker-container';
+                const container = $(containerId);
+                const otherContainer = $(otherContainerId);
+
+                if(!container) return;
+
+                container.innerHTML = this.isMobile ? this.getMobileHTML() : this.getDesktopHTML();
+                otherContainer.innerHTML = '';
+                
+                this.attachEventListeners();
+            }
+
+            getMobileHTML() {
+                 if (this.buildings.length === 0) {
+                    return `<p class="text-center text-sm text-slate-500">No checklists available.</p>`;
+                 }
+                 return `
+                    <label for="building-select" class="sr-only">Select Building</label>
+                    <select id="building-select" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                        <option value="">-- Select a Building --</option>
+                        ${this.buildings.map(b => `<option value="${b.url}">${escapeHTML(b.name)}</option>`).join('')}
+                    </select>
+                `;
+            }
+
+            getDesktopHTML() {
+                return `
+                    <div class="sticky top-20">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-md p-4">
+                            <h2 class="text-lg font-semibold mb-3">Buildings</h2>
+                             <input type="search" id="building-search" placeholder="Search buildings..." class="mb-3 block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                            <ul id="building-list" class="space-y-1 max-h-[60vh] overflow-y-auto">
+                                ${this.buildings.length === 0 ? `<li class="text-sm text-slate-500">No checklists available.</li>` : ''}
+                                ${this.buildings.map(b => `
+                                    <li>
+                                        <a href="#" data-url="${b.url}" class="block p-2 rounded-md hover:bg-sky-100 dark:hover:bg-sky-900/50 focus-ring font-medium text-slate-700 dark:text-slate-300">
+                                            ${escapeHTML(b.name)}
+                                        </a>
+                                    </li>
+                                `).join('')}
+                            </ul>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            attachEventListeners() {
+                if (this.isMobile) {
+                    $('#building-select', document)?.addEventListener('change', (e) => {
+                        if(e.target.value) this.selectBuilding(e.target.value);
+                    });
+                } else {
+                    $('#building-list', this)?.addEventListener('click', (e) => {
+                        e.preventDefault();
+                        const link = e.target.closest('a');
+                        if (link && link.dataset.url) {
+                            $$('a', this).forEach(a => a.classList.remove('bg-sky-100', 'dark:bg-sky-900/50'));
+                            link.classList.add('bg-sky-100', 'dark:bg-sky-900/50');
+                            this.selectBuilding(link.dataset.url);
+                        }
+                    });
+                    $('#building-search', this)?.addEventListener('input', debounce((e) => this.filterBuildings(e.target.value), 200));
+                }
+            }
+
+            filterBuildings(query) {
+                const q = query.toLowerCase();
+                $$('#building-list li a').forEach(link => {
+                    const name = link.textContent.toLowerCase();
+                    link.parentElement.style.display = name.includes(q) ? '' : 'none';
+                });
+            }
+
+            selectBuilding(url) {
+                document.dispatchEvent(new CustomEvent('building-selected', { detail: { url } }));
+            }
+            
+            handleResize() {
+                const newIsMobile = window.innerWidth < 640;
+                if (newIsMobile !== this.isMobile) {
+                    this.isMobile = newIsMobile;
+                    this.render();
+                }
+            }
+        }
+        customElements.define('building-picker', BuildingPicker);
+        
+        /**
+         * ChecklistWorkspace Component: Renders tabs, tables, and manages inspection state.
+         */
+        class ChecklistWorkspace extends HTMLElement {
+            constructor() {
+                super();
+                this.data = null;
+                this.inspected = new Set();
+                this.buildingUrl = null;
+                this.sortState = {};
+            }
+
+            static get observedAttributes() { return ['url']; }
+
+            attributeChangedCallback(name, oldValue, newValue) {
+                if (name === 'url' && oldValue !== newValue) {
+                    this.buildingUrl = newValue;
+                    this.loadChecklist();
+                }
+            }
+            
+            async loadChecklist() {
+                this.innerHTML = `<div class="text-center py-20">Loading checklist...</div>`;
+                try {
+                    const github = new GitHubClient();
+                    this.data = await github.getBuildingChecklist(this.buildingUrl);
+                    this.buildingId = this.data.projectName.replace(/\s+/g, '-');
+                    this.loadInspectedState();
+                    this.render();
+                } catch (error) {
+                    showToast(error.message, 'error');
+                    this.innerHTML = `<div class="text-center py-20 text-red-500">${escapeHTML(error.message)}</div>`;
+                    console.error("Failed to load checklist:", error);
+                }
+            }
+            
+            loadInspectedState() {
+                this.inspected.clear();
+                this.data.devices.forEach(device => {
+                    const key = `${this.buildingId}-${device.address}`;
+                    if(localStorage.getItem(key) === 'true') {
+                        this.inspected.add(device.address);
+                    }
+                });
+            }
+
+            saveInspectedState(address, isInspected) {
+                const key = `${this.buildingId}-${address}`;
+                if (isInspected) {
+                    localStorage.setItem(key, 'true');
+                    this.inspected.add(address);
+                } else {
+                    localStorage.removeItem(key);
+                    this.inspected.delete(address);
+                }
+            }
+            
+            getDeviceCategory(deviceType) {
+                const type = deviceType.toLowerCase();
+                if (type.includes('smoke') || type.includes('heat') || type.includes('detector')) return 'Detectors';
+                if (type.includes('module')) return 'Modules';
+                if (type.includes('annunciator')) return 'Annunciators';
+                if (type.includes('nac')) return 'NACs';
+                return 'Modules'; // Default category
+            }
+
+            render() {
+                if (!this.data) return;
+                
+                const categories = {
+                    'Detectors': { icon: '📟', devices: [] },
+                    'Modules': { icon: '🧩', devices: [] },
+                    'Annunciators': { icon: '📢', devices: [] },
+                    'NACs': { icon: '🔔', devices: [] }
+                };
+                
+                this.data.devices.forEach(device => {
+                    const category = this.getDeviceCategory(device.deviceType);
+                    categories[category].devices.push(device);
+                });
+
+                this.innerHTML = `
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 sm:p-6">
+                        <header class="mb-6">
+                           <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">${escapeHTML(this.data.projectName)}</h2>
+                           <div class="mt-4 flex flex-wrap gap-2">
+                                <button data-action="mark-all" class="text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-semibold py-1.5 px-3 rounded-md focus-ring">Mark All Inspected</button>
+                                <button data-action="clear-all" class="text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-semibold py-1.5 px-3 rounded-md focus-ring">Clear All</button>
+                                <button data-action="export" class="text-sm bg-green-200 hover:bg-green-300 dark:bg-green-800 dark:hover:bg-green-700 font-semibold py-1.5 px-3 rounded-md focus-ring">Export ✔️ List</button>
+                           </div>
+                        </header>
+                        <div id="tab-container" class="border-b border-slate-200 dark:border-slate-700">
+                           <div role="tablist" aria-label="Device Categories" class="flex flex-wrap -mb-px">
+                              ${Object.keys(categories).map((cat, i) => `
+                                  <button role="tab" id="tab-${cat}" aria-controls="panel-${cat}" aria-selected="${i===0}" class="tab-btn inline-flex items-center gap-2 p-3 sm:p-4 border-b-2 font-medium ${i===0 ? 'border-sky-500 text-sky-600 dark:text-sky-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}">
+                                     ${categories[cat].icon} ${cat}
+                                  </button>
+                              `).join('')}
+                           </div>
+                        </div>
+                        <div class="mt-6">
+                           ${Object.keys(categories).map((cat, i) => `
+                              <div role="tabpanel" id="panel-${cat}" aria-labelledby="tab-${cat}" class="${i > 0 ? 'hidden' : ''}">
+                                 ${this.renderCategoryContent(cat, categories[cat].devices)}
+                              </div>
+                           `).join('')}
+                        </div>
+                    </div>
+                `;
+                this.attachEventListeners();
+            }
+            
+            renderCategoryContent(category, devices) {
+                if (devices.length === 0) {
+                    return `<p class="text-slate-500 text-center py-8">No devices in this category.</p>`;
+                }
+
+                const total = devices.length;
+                const inspectedCount = devices.filter(d => this.inspected.has(d.address)).length;
+                const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
+                
+                return `
+                    <div class="mb-4">
+                        <div class="flex justify-between items-center mb-1 text-sm font-medium">
+                            <span class="text-slate-600 dark:text-slate-300">Progress</span>
+                            <span>${inspectedCount} / ${total} inspected (${percent}%)</span>
+                        </div>
+                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                            <div class="bg-sky-600 h-2.5 rounded-full" style="width: ${percent}%"></div>
+                        </div>
+                    </div>
+                    
+                    <div class="my-4">
+                        <input type="search" data-category="${category}" placeholder="Search this category..." class="block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                    </div>
+
+                    <!-- Completed Devices Accordion -->
+                    <div id="completed-${category}"></div>
+
+                    <!-- Active Devices Table -->
+                    <div id="active-${category}" class="overflow-x-auto"></div>
+                    <div aria-live="polite" class="sr-only" id="move-announcer-${category}"></div>
+                `;
+            }
+
+            renderTableAndAccordion(category) {
+                const panel = $(`#panel-${category}`, this);
+                if(!panel) return;
+                
+                const allDevices = this.data.devices.filter(d => this.getDeviceCategory(d.deviceType) === category);
+                
+                // Sort devices
+                const sortKey = this.sortState[category]?.key;
+                const sortDir = this.sortState[category]?.dir;
+                if(sortKey && sortDir) {
+                    allDevices.sort((a,b) => {
+                        const valA = a[sortKey]?.toString() || '';
+                        const valB = b[sortKey]?.toString() || '';
+                        const comparison = valA.localeCompare(valB, undefined, { numeric: true });
+                        return sortDir === 'asc' ? comparison : -comparison;
+                    });
+                }
+
+                const inspectedDevices = allDevices.filter(d => this.inspected.has(d.address));
+                const activeDevices = allDevices.filter(d => !this.inspected.has(d.address));
+
+                const completedContainer = $(`#completed-${category}`, panel);
+                const activeContainer = $(`#active-${category}`, panel);
+
+                completedContainer.innerHTML = this.renderAccordionHTML(category, inspectedDevices);
+                activeContainer.innerHTML = this.renderTableHTML(category, activeDevices, false);
+                
+                this.attachTableEventListeners(panel);
+            }
+
+            renderAccordionHTML(category, devices) {
+                if (devices.length === 0) return '';
+                const isOpen = true; // Always start open
+                return `
+                    <div class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg">
+                        <button aria-expanded="${isOpen}" aria-controls="completed-list-${category}" class="accordion-toggle w-full flex justify-between items-center p-3 font-semibold bg-slate-100 dark:bg-slate-800 rounded-t-lg focus-ring">
+                           <span>Completed Devices (${devices.length})</span>
+                           <svg class="accordion-arrow w-5 h-5 transition-transform transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        </button>
+                        <div id="completed-list-${category}" class="${isOpen ? '' : 'hidden'}">
+                             ${this.renderTableHTML(category, devices, true)}
+                        </div>
+                    </div>
+                `;
+            }
+
+            renderTableHTML(category, devices, isCompleted) {
+                 const headers = [
+                    { key: 'loop', label: 'Loop' },
+                    { key: 'address', label: 'Address' },
+                    { key: 'model', label: 'Model' },
+                    { key: 'serialNumber', label: 'Serial #' },
+                    { key: 'messages', label: 'Location/Message' }
+                ];
+                return `
+                    <table class="w-full text-sm text-left">
+                        <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800">
+                            <tr>
+                                ${headers.map(h => {
+                                    const sortDir = this.sortState[category]?.key === h.key ? this.sortState[category]?.dir : null;
+                                    const sortIcon = sortDir === 'asc' ? '▲' : (sortDir === 'desc' ? '▼' : '');
+                                    return `<th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="${h.key}" ${sortDir ? `aria-sort="${sortDir === 'asc' ? 'ascending':'descending'}"` : ''}>${h.label} <svg class="inline w-3 h-3" fill="currentColor" viewBox="0 0 20 20">${sortIcon}</svg></th>`;
+                                }).join('')}
+                                <th scope="col" class="p-3 text-center">
+                                    <span class="sr-only">Inspected</span>
+                                     ✅
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
+                           ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr><td colspan="6" class="p-4 text-center text-slate-500">No devices to show.</td></tr>`}
+                        </tbody>
+                    </table>
+                `;
+            }
+
+            renderRowHTML(device) {
+                const isInspected = this.inspected.has(device.address);
+                return `
+                    <tr data-address="${device.address}" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
+                        <td class="p-3 font-medium">${escapeHTML(device.loop)}</td>
+                        <td class="p-3">${escapeHTML(device.address)}</td>
+                        <td class="p-3">${escapeHTML(device.model)}</td>
+                        <td class="p-3">${escapeHTML(device.serialNumber)}</td>
+                        <td class="p-3 max-w-xs truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
+                        <td class="p-3 text-center">
+                            <input type="checkbox" data-address="${device.address}" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus-ring" ${isInspected ? 'checked' : ''}>
+                        </td>
+                    </tr>
+                `;
+            }
+
+            attachEventListeners() {
+                // Tab switching
+                $('.tab-btn', this)?.click(); // Ensure first tab content is rendered
+                $$('.tab-btn', this).forEach(btn => {
+                    btn.addEventListener('click', (e) => this.handleTabClick(e));
+                    // Initial render for all tables to ensure event listeners are attached
+                    this.renderTableAndAccordion(e.currentTarget.id.replace('tab-', ''));
+                });
+
+                // Global actions
+                this.addEventListener('click', (e) => {
+                    const action = e.target.closest('[data-action]')?.dataset.action;
+                    if (action) this.handleGlobalAction(action);
+                });
+
+                // Accordion toggles
+                this.addEventListener('click', (e) => {
+                    const toggle = e.target.closest('.accordion-toggle');
+                    if(toggle) {
+                        const content = toggle.nextElementSibling;
+                        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
+                        toggle.setAttribute('aria-expanded', !isExpanded);
+                        content.classList.toggle('hidden');
+                    }
+                });
+
+                // Search inputs
+                $$('input[type="search"]', this).forEach(input => {
+                    input.addEventListener('input', debounce((e) => {
+                        this.filterTable(e.target.dataset.category, e.target.value);
+                    }, 250));
+                });
+            }
+
+            attachTableEventListeners(panel) {
+                 // Checkbox changes
+                panel.addEventListener('change', (e) => {
+                    if (e.target.type === 'checkbox') {
+                        this.handleCheckboxChange(e.target);
+                    }
+                });
+                // Sorting
+                panel.addEventListener('click', (e) => {
+                    const header = e.target.closest('.table-header-sortable');
+                    if(header) {
+                        this.handleSort(header.closest('[role=tabpanel]').id.replace('panel-', ''), header.dataset.sortKey);
+                    }
+                });
+            }
+            
+            handleTabClick(e) {
+                const clickedTab = e.currentTarget;
+                $$('.tab-btn', this).forEach(btn => {
+                    const panel = $(`#${btn.getAttribute('aria-controls')}`, this);
+                    if (btn === clickedTab) {
+                        btn.classList.add('border-sky-500', 'text-sky-600', 'dark:text-sky-500');
+                        btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-300');
+                        btn.setAttribute('aria-selected', 'true');
+                        panel.classList.remove('hidden');
+                        this.renderTableAndAccordion(btn.id.replace('tab-',''));
+                    } else {
+                        btn.classList.remove('border-sky-500', 'text-sky-600', 'dark:text-sky-500');
+                        btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-300');
+                        btn.setAttribute('aria-selected', 'false');
+                        panel.classList.add('hidden');
+                    }
+                });
+            }
+
+            handleCheckboxChange(checkbox) {
+                const { address } = checkbox.dataset;
+                const isInspected = checkbox.checked;
+                this.saveInspectedState(address, isInspected);
+                
+                const category = this.getDeviceCategory(this.data.devices.find(d => d.address === address).deviceType);
+                this.updateUI(category);
+
+                const announcer = $(`#move-announcer-${category}`);
+                announcer.textContent = `Device ${address} moved to ${isInspected ? 'Completed' : 'Active'} list.`;
+            }
+
+            handleSort(category, key) {
+                const currentSort = this.sortState[category];
+                let newDir;
+                if(currentSort?.key === key) {
+                    newDir = currentSort.dir === 'asc' ? 'desc' : 'asc';
+                } else {
+                    newDir = 'asc';
+                }
+                this.sortState[category] = { key, dir: newDir };
+                this.updateUI(category);
+            }
+            
+            handleGlobalAction(action) {
+                const allAddresses = this.data.devices.map(d => d.address);
+                if (action === 'mark-all') {
+                    if (!confirm("Are you sure you want to mark all devices as inspected?")) return;
+                    allAddresses.forEach(address => this.saveInspectedState(address, true));
+                }
+                if (action === 'clear-all') {
+                    if (!confirm("Are you sure you want to clear all inspection checkmarks?")) return;
+                    allAddresses.forEach(address => this.saveInspectedState(address, false));
+                }
+                if (action === 'export') {
+                    this.exportInspectedList();
+                    return;
+                }
+                // Re-render all visible categories
+                $$('[role=tabpanel]').forEach(panel => {
+                    if(!panel.classList.contains('hidden')) {
+                        this.updateUI(panel.id.replace('panel-', ''));
+                    }
+                });
+                showToast(`Action '${action}' completed.`, 'success');
+            }
+
+            exportInspectedList() {
+                const inspectedAddresses = Array.from(this.inspected);
+                const data = JSON.stringify({
+                    projectName: this.data.projectName,
+                    inspectedCount: inspectedAddresses.length,
+                    inspectedAddresses: inspectedAddresses
+                }, null, 2);
+                const blob = new Blob([data], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `${this.buildingId}-inspected.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast('Exported inspected list.', 'info');
+            }
+
+            filterTable(category, query) {
+                const q = query.toLowerCase();
+                const panel = $(`#panel-${category}`, this);
+                $$('tbody tr', panel).forEach(row => {
+                    const text = row.textContent.toLowerCase();
+                    row.style.display = text.includes(q) ? '' : 'none';
+                });
+            }
+
+            updateUI(category) {
+                const panel = $(`#panel-${category}`, this);
+                if (!panel || panel.classList.contains('hidden')) return;
+
+                // Full re-render of the table and accordion for the category
+                this.renderTableAndAccordion(category);
+
+                // Update progress bar
+                const allDevices = this.data.devices.filter(d => this.getDeviceCategory(d.deviceType) === category);
+                const inspectedCount = allDevices.filter(d => this.inspected.has(d.address)).length;
+                const total = allDevices.length;
+                const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
+                
+                const progressText = panel.querySelector('.flex.justify-between span:last-child');
+                const progressBar = panel.querySelector('.bg-sky-600');
+                if(progressText) progressText.textContent = `${inspectedCount} / ${total} inspected (${percent}%)`;
+                if(progressBar) progressBar.style.width = `${percent}%`;
+            }
+        }
+        customElements.define('checklist-workspace', ChecklistWorkspace);
+
+        // --- APP INITIALIZATION ---
+        document.addEventListener('DOMContentLoaded', () => {
+            // 1. Register Service Worker
+            if ('serviceWorker' in navigator) {
+                const swScript = document.getElementById('sw').textContent;
+                const swUrl = URL.createObjectURL(new Blob([swScript], { type: 'application/javascript' }));
+                navigator.serviceWorker.register(swUrl)
+                    .then(reg => console.log('Service Worker registered successfully.', reg.scope))
+                    .catch(err => console.error('Service Worker registration failed:', err));
+            }
+
+            // 2. Initialize UI Components
+            const mobilePickerContainer = $('#mobile-building-picker-container');
+            const desktopPickerContainer = $('#desktop-building-picker-container');
+            
+            mobilePickerContainer.appendChild(document.createElement('building-picker'));
+            desktopPickerContainer.appendChild(document.createElement('building-picker'));
+
+            // 3. Handle building selection
+            document.addEventListener('building-selected', (e) => {
+                const { url } = e.detail;
+                const workspaceContainer = $('#checklist-workspace');
+                $('#welcome-message')?.remove();
+                
+                let workspace = $('checklist-workspace', workspaceContainer);
+                if (!workspace) {
+                    workspace = document.createElement('checklist-workspace');
+                    workspaceContainer.innerHTML = '';
+                    workspaceContainer.appendChild(workspace);
+                    
+                }
+                workspace.setAttribute('url', url);
+            });
+        });
+    </script>
+
+</body>
+</html>
