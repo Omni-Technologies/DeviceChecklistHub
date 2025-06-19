@@ -44,15 +44,24 @@
       .focus-ring { @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500; }
       
       /* Arrow rotation for accordion */
-      [aria-expanded="true"] > .accordion-arrow { transform: rotate(180deg); }
+      [aria-expanded="true"] .accordion-arrow { transform: rotate(180deg); }
+      [aria-expanded="true"] .details-arrow { transform: rotate(180deg); }
       
       /* Styling for sortable table headers */
-      .table-header-sortable:hover { @apply bg-slate-700; }
+      .table-header-sortable:hover { @apply bg-slate-200 dark:bg-slate-700; }
       .table-header-sortable svg { opacity: 0.5; transition: opacity 0.2s; }
       .table-header-sortable[aria-sort] svg { opacity: 1; }
       
-      /* Click-to-check row style */
-      .device-row { cursor: pointer; }
+      /* Base styles for rows (mobile-first card approach) */
+      .device-row {
+          @apply block border-b border-slate-200 dark:border-slate-700 p-4 cursor-pointer;
+      }
+      /* Transition to table row on larger screens */
+      @screen sm {
+          .device-row {
+              @apply table-row p-0 border-b-0;
+          }
+      }
       
       /* Visual feedback on check/uncheck */
       @keyframes flash-sky {
@@ -177,8 +186,8 @@
     <script type="module">
         // ===================================================================================
         // --- CHECKLIST DATA ---
-        // To add a new checklist for another location, simply copy the object structure below
-        // and add it to this array. Make sure the 'key' is unique.
+        // You can add new checklists here. The app will automatically detect the format
+        // (SAS or Excel) and display the data in the unified table.
         // ===================================================================================
         const CHECKLISTS = [
           {
@@ -312,14 +321,360 @@
             ]
           },
           {
-            key: "city_hall_annex", // Example of a second checklist
-            name: "City Hall Annex",
-            location: "Quarterly Device Test",
+            key: "purina_facility", // Data from your Excel/CSV file
+            name: "Purina Facility",
+            location: "Device List Report",
             devices: [
-              { loop: 1, address: 1, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '5550001234', messages: 'LOBBY SMOKE DETECTOR' },
-              { loop: 1, address: 2, model: '278', deviceType: 'Pull Station', serialNumber: '5550005678', messages: 'LOBBY PULL BY EAST EXIT' },
-              { loop: 1, address: 3, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '5550009012', messages: 'BREAK ROOM HEAT DETECTOR' },
-              { loop: 'N/A', address: 1, model: 'Genesis', deviceType: 'NAC', serialNumber: 'N/A', messages: 'HORN/STROBE CIRCUIT 1' },
+                { "System Address ( Node : Card : Device )": "001:002:0173", "Location Text": "PULL 2ND FLOOR BLDG 1\nCONFERENCE ROOM", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4899591168" },
+                { "System Address ( Node : Card : Device )": "001:002:0138", "Location Text": "10 PULL  DOOR 46 BLDG 11 2ND FLOOR SOUTH", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891961051" },
+                { "System Address ( Node : Card : Device )": "001:002:0129", "Location Text": "2 PULL DOOR 14A BLDG \n11 SOUTH FRONT ENTRY", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891943361" },
+                { "System Address ( Node : Card : Device )": "002:002:0134", "Location Text": "PULL DOOR 18 WEST \nBLDG 14 2FL OFFICE", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4896941669" },
+                { "System Address ( Node : Card : Device )": "003:002:0442", "Location Text": "PULL DOOR B4 5 BLDG 4 4TH FLOOR", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891967824" },
+                { "System Address ( Node : Card : Device )": "003:002:0144", "Location Text": "PULL DOOR 23 N/W  BLDG 9 MAINTENANCE", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891946898" },
+                { "System Address ( Node : Card : Device )": "003:002:0415", "Location Text": "PULL DOOR 1 BLDG 4", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891962294" },
+                { "System Address ( Node : Card : Device )": "002:002:0154", "Location Text": "PULL BLDG 19      DOOR 40", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4892434776" },
+                { "System Address ( Node : Card : Device )": "001:002:0198", "Location Text": "1 PULL SECURITY RM   \nBLDG 11", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4897378105" },
+                { "System Address ( Node : Card : Device )": "002:002:0131", "Location Text": "PULL DOOR 18 BLDG EAST LOWER OFFICE", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4895433967" },
+                { "System Address ( Node : Card : Device )": "001:002:0188", "Location Text": "13 PULL DOOR 17      SOUTH BLDG 15", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891949578" },
+                { "System Address ( Node : Card : Device )": "001:002:0137", "Location Text": "9 PULL DOOR 44 BLDG  \n11 2FL NORTH", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4892053748" },
+                { "System Address ( Node : Card : Device )": "003:002:0126", "Location Text": "PULL DOOR 53 N/E  BLDG 9 2ND FL STAIRS", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891973245" },
+                { "System Address ( Node : Card : Device )": "003:002:0405", "Location Text": "PULL DOOR 24A BLDG 20", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4895961071" },
+                { "System Address ( Node : Card : Device )": "003:002:0432", "Location Text": "PULL DOOR 35 BLDG 2 MCCT RM", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891953384" },
+                { "System Address ( Node : Card : Device )": "001:002:0136", "Location Text": "8 PULL DOOR 45 BLDG  \n13 2ND FLOOR", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4896795866" },
+                { "System Address ( Node : Card : Device )": "001:002:0134", "Location Text": "6 PULL DOOR 16 SOUTH  BLDG 7", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891944450" },
+                { "System Address ( Node : Card : Device )": "003:002:0140", "Location Text": "PULL DOOR 54 SOUTH BLDG 9 2ND FL STAIRS", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891946157" },
+                { "System Address ( Node : Card : Device )": "002:002:0132", "Location Text": "PULL DOOR 28 BLDG 15 BY RAIL DOCK", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4891942692" },
+                { "System Address ( Node : Card : Device )": "001:002:0197", "Location Text": "3 PULL DOOR 14 BLDG  \n11 LOCKER ROOM", "Device Type ID": 11, "SKU": "SIGA-278", "SKU Description": "Dual Action Pull Station", "Serial Number": "4897780298" },
+                { "System Address ( Node : Card : Device )": "003:002:0157", "Location Text": "PULL ON STAIRS TO MEZZ IN BLDG 8", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4836678266" },
+                { "System Address ( Node : Card : Device )": "001:002:0135", "Location Text": "PULL DOOR 15 SOUTH BLDG 7", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4824970495" },
+                { "System Address ( Node : Card : Device )": "003:002:0436", "Location Text": "PULL DOOR 39 BLDG 1 S,E STAIRS", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085597" },
+                { "System Address ( Node : Card : Device )": "002:002:0143", "Location Text": "227 SUPERFVISORY RELAY EOL", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802657257" },
+                { "System Address ( Node : Card : Device )": "003:002:0210", "Location Text": "3RD FLR BLDG 3 FLAMELES VNT SYS 2301 FAULT", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4808021144" },
+                { "System Address ( Node : Card : Device )": "003:002:0388", "Location Text": "AC POWER STORBES&PANEL DRY INGEDIENT", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086488" },
+                { "System Address ( Node : Card : Device )": "003:002:0449", "Location Text": "RELAY EOL 3-1.4 BLDG4 DRY INGREDIENTS AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085955" },
+                { "System Address ( Node : Card : Device )": "003:002:0142", "Location Text": "GATEVALVE RELAY EOL", "Device Type ID": 3, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4836678877" },
+                { "System Address ( Node : Card : Device )": "003:002:0422", "Location Text": "PULL DOOR 8 BLDG 2", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085986" },
+                { "System Address ( Node : Card : Device )": "002:002:0162", "Location Text": "720 TAMPER BLDG 14 OUTSIDE WF11/13", "Device Type ID": 7, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802655529" },
+                { "System Address ( Node : Card : Device )": "003:002:0171", "Location Text": "PULL DOOR 51 BLDG 3 2ND FLOOR STAIRS", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086341" },
+                { "System Address ( Node : Card : Device )": "001:002:0132", "Location Text": "PULL DOOR 12 BLDG 12 FREEZER", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085931" },
+                { "System Address ( Node : Card : Device )": "003:002:0211", "Location Text": "3RD FLR BLDG 3 FLAMELES VNT SYS 2301 SERVC", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4808020598" },
+                { "System Address ( Node : Card : Device )": "003:002:0193", "Location Text": "GATEVALVE 3-2-193", "Device Type ID": 3, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802655246" },
+                { "System Address ( Node : Card : Device )": "003:002:0461", "Location Text": "RELAY EOL 5-1.4 BLDG1LOADER/UNLOADER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4822831880" },
+                { "System Address ( Node : Card : Device )": "003:002:0409", "Location Text": "PULL DOOR 34 BLDG 2 2ND FL WEST MEZZ", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802656496" },
+                { "System Address ( Node : Card : Device )": "003:002:0214", "Location Text": "3RD FLR BLDG 3 FLAMELES VNT SYS 2600 SERVC", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4808021342" },
+                { "System Address ( Node : Card : Device )": "003:002:0423", "Location Text": "PULL DOOR 7A      BLDG 2A", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838303968" },
+                { "System Address ( Node : Card : Device )": "003:002:0425", "Location Text": "PULL DOOR 8A BLDG 1 RETORTS AERA", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839065759" },
+                { "System Address ( Node : Card : Device )": "003:002:0429", "Location Text": "PULL DOOR 32 BLDG 2 2ND FLR W DOOR", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839066473" },
+                { "System Address ( Node : Card : Device )": "003:002:0499", "Location Text": "BLDG 4 OLD SERVERRM PANEL TROUBLE", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838003042" },
+                { "System Address ( Node : Card : Device )": "003:002:0414", "Location Text": "PULL DOOR 4 BLDG 2A", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086204" },
+                { "System Address ( Node : Card : Device )": "002:002:0155", "Location Text": "PULL BLDG 14 DOOR 19", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839070425" },
+                { "System Address ( Node : Card : Device )": "003:002:0427", "Location Text": "PULL DOOR B4-4 BLDG 4 3RD FLOOR", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086105" },
+                { "System Address ( Node : Card : Device )": "003:002:0437", "Location Text": "PULL DOOR 49 LEVEL 3 BLDG 3 PENTHOUSE", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086624" },
+                { "System Address ( Node : Card : Device )": "003:002:0133", "Location Text": "366 POWER FINISHED PROD", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086228" },
+                { "System Address ( Node : Card : Device )": "003:002:0448", "Location Text": "RELAY EOL 4-3.3 BLDG4 DRY INGREDIENTS AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086259" },
+                { "System Address ( Node : Card : Device )": "003:002:0463", "Location Text": "RELAY EOL 6-1.5 BLDG2 2ND FLR COOKER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839070340" },
+                { "System Address ( Node : Card : Device )": "002:002:0130", "Location Text": "367 AC POWER STROBES&PANEL RAIL DOCK AERA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086211" },
+                { "System Address ( Node : Card : Device )": "003:002:0493", "Location Text": "PULL DOOR B4 8 BLDG 4 2ND FLOOR", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085825" },
+                { "System Address ( Node : Card : Device )": "003:002:0202", "Location Text": "PULL BUILDING 21 SOUTH EAST", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4806499785" },
+                { "System Address ( Node : Card : Device )": "003:002:0430", "Location Text": "PULL DOOR 3 BLDG 2 2ND FLR E MEZZ", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086280" },
+                { "System Address ( Node : Card : Device )": "003:002:0413", "Location Text": "PULL DOOR 5 BOILER ROOM", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086457" },
+                { "System Address ( Node : Card : Device )": "001:002:0128", "Location Text": "WATERFLOW DRY SYSTEM BATT CHRG AREA BLD 14", "Device Type ID": 17, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4818519051" },
+                { "System Address ( Node : Card : Device )": "001:002:0190", "Location Text": "EOL RELAY 2-1.4 BLDG1 LOADER/UNLOADER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086587" },
+                { "System Address ( Node : Card : Device )": "003:002:0386", "Location Text": "RELAY EOL#2 PACKAGING AERA BLDG 3", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4829737789" },
+                { "System Address ( Node : Card : Device )": "003:002:0195", "Location Text": "GATEVALVE 3-2-195", "Device Type ID": 3, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802653747" },
+                { "System Address ( Node : Card : Device )": "001:002:0131", "Location Text": "PULL DOOR 13A BLDG 5", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838304071" },
+                { "System Address ( Node : Card : Device )": "001:002:0160", "Location Text": "GATEVALVE 1-2-160", "Device Type ID": 3, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4826642222" },
+                { "System Address ( Node : Card : Device )": "003:002:0447", "Location Text": "RELAY EOL 4-4.3 BLDG2A HALLWAY", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086273" },
+                { "System Address ( Node : Card : Device )": "003:002:0462", "Location Text": "AC POWER STROBES&PANEL FANCY FEAST", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839066350" },
+                { "System Address ( Node : Card : Device )": "003:002:0455", "Location Text": "RELAY EOL 2-2.3 BLDG1 LOADER/UNLOADER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838002656" },
+                { "System Address ( Node : Card : Device )": "001:002:0157", "Location Text": "GATEVALVE 1-2-157", "Device Type ID": 3, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802656991" },
+                { "System Address ( Node : Card : Device )": "003:002:0172", "Location Text": "SUPERVISORY POWER 2ND FLOOR", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839070050" },
+                { "System Address ( Node : Card : Device )": "001:002:0191", "Location Text": "EOL RELAY 1-2.4 BLDG5 FILLER/SEAMER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838002489" },
+                { "System Address ( Node : Card : Device )": "003:002:0156", "Location Text": "SUPERVISORY RELAY EOL BY WF 3 BLDG 6", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802653082" },
+                { "System Address ( Node : Card : Device )": "003:002:0452", "Location Text": "RELAY EOL 4-2.3 BLDG2FILLER/SEAMER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838305535" },
+                { "System Address ( Node : Card : Device )": "003:002:0212", "Location Text": "3RD FLR BLDG 3 FLAMELES VNT SYS 2600 ALARM", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4809876606" },
+                { "System Address ( Node : Card : Device )": "003:002:0426", "Location Text": "213 RELAY 3-4.3 BLDG1 LOADER/UNLOADER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4801936995" },
+                { "System Address ( Node : Card : Device )": "001:002:0192", "Location Text": "ELEVATOR SHUNT POWER MONITOR 1-2-192", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4827691328" },
+                { "System Address ( Node : Card : Device )": "003:002:0435", "Location Text": "PULL DOOR 38 BLDG \n5 WEST MEZZ", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802656984" },
+                { "System Address ( Node : Card : Device )": "003:002:0428", "Location Text": "LOW AIR RISER 6 BY DOOR 25", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4804576419" },
+                { "System Address ( Node : Card : Device )": "003:002:0417", "Location Text": "PULL DOOR 3 BLDG 2A", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086600" },
+                { "System Address ( Node : Card : Device )": "003:002:0412", "Location Text": "PULL DOOR 6 BOILER ROOM", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086266" },
+                { "System Address ( Node : Card : Device )": "003:002:0446", "Location Text": "RELAY EOL 5-3.4      BLDG2A COMPRESSOR RM", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4801936650" },
+                { "System Address ( Node : Card : Device )": "003:002:0167", "Location Text": "PULL DOOR 45 BLDG  3 3RD FLOO TO BLDG 4", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085917" },
+                { "System Address ( Node : Card : Device )": "003:002:0385", "Location Text": "RELAY EOL#1 PACKAGING AERA BLDG 3", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4823960718" },
+                { "System Address ( Node : Card : Device )": "003:002:0418", "Location Text": "PULL DOOR 2 BLDG 4", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086464" },
+                { "System Address ( Node : Card : Device )": "003:002:0170", "Location Text": "PULL DOOR 50 LEVEL4 BLDG 3 PENTHOUSE", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086402" },
+                { "System Address ( Node : Card : Device )": "003:002:0389", "Location Text": "AC POWER STROBES&PANEL COMPRESSOR AERA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086365" },
+                { "System Address ( Node : Card : Device )": "001:002:0189", "Location Text": "PULL DOOR 13 BLDG 5 BY COLD STORAGE", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4838302121" },
+                { "System Address ( Node : Card : Device )": "003:002:0196", "Location Text": "3RD FLR BLDG 3 FLAMELES VNT SYS 2301 ALARM", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4808024381" },
+                { "System Address ( Node : Card : Device )": "003:002:0199", "Location Text": "NORTH DUCT AHU1 BUILDING 21", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4806480509" },
+                { "System Address ( Node : Card : Device )": "003:002:0424", "Location Text": "PULL DOOR BOILER ROOM", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085658" },
+                { "System Address ( Node : Card : Device )": "003:002:0182", "Location Text": "SUPERVISORY POWER 3RD FLOOR", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085641" },
+                { "System Address ( Node : Card : Device )": "003:002:0420", "Location Text": "PULL DOOR 25 BLDG 4", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086358" },
+                { "System Address ( Node : Card : Device )": "003:002:0411", "Location Text": "PULL DOOR 9  BLDG 5", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4836678648" },
+                { "System Address ( Node : Card : Device )": "001:002:0181", "Location Text": "AC POWER STROBES&PANEL EMPTY CAN AERA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085696" },
+                { "System Address ( Node : Card : Device )": "003:002:0451", "Location Text": "RELAY EOL 3-3.5 BLDG4 DRY INGREDIENTS AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086426" },
+                { "System Address ( Node : Card : Device )": "002:002:0163", "Location Text": "222 SUPERVISORY RELAY EOL", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4802650937" },
+                { "System Address ( Node : Card : Device )": "001:002:0133", "Location Text": "SUPERVISORY RELAY BLDG 12 AMMONIA ROOM", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086549" },
+                { "System Address ( Node : Card : Device )": "003:002:0168", "Location Text": "PULL DOOR 46 BLDG3 3 FLOOR STAIRS", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085870" },
+                { "System Address ( Node : Card : Device )": "003:002:0201", "Location Text": "PULL BUILDING 21 NORTH EXIT", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4806499587" },
+                { "System Address ( Node : Card : Device )": "003:002:0459", "Location Text": "RELAY EOL 1-3.3 BLDG1LOADER/UNLOADER AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839070043" },
+                { "System Address ( Node : Card : Device )": "001:002:0202", "Location Text": "ROOF TOP UNIT ABOVE WAREHOUSE", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4808274618" },
+                { "System Address ( Node : Card : Device )": "003:002:0460", "Location Text": "AC POWER STROBE&PANEL 2NDFL MEZZANINE", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086433" },
+                { "System Address ( Node : Card : Device )": "003:002:0453", "Location Text": "RELAY EOL 5-2.4 BLDG 2A RO ROOM", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839066015" },
+                { "System Address ( Node : Card : Device )": "003:002:0141", "Location Text": "PULL BLDG 19 DOOR 37", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4837599799" },
+                { "System Address ( Node : Card : Device )": "003:002:0445", "Location Text": "MONITOR 1ST FLR ELE FREIGHT SHUNT PWR", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4809576247" },
+                { "System Address ( Node : Card : Device )": "003:002:0194", "Location Text": "SUPERVISORY RELAY EOL", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4836677719" },
+                { "System Address ( Node : Card : Device )": "003:002:0200", "Location Text": "PULL  BUILDING 21", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4806483296" },
+                { "System Address ( Node : Card : Device )": "003:002:0169", "Location Text": "PULL DOOR 48 LEVEL5 BLDG 3 PENTHOUSE", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085788" },
+                { "System Address ( Node : Card : Device )": "003:002:0143", "Location Text": "PULL DOOR 22 NORTH BLDG 9", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086594" },
+                { "System Address ( Node : Card : Device )": "003:002:0450", "Location Text": "RELAY EOL 3-2.4 BLDG4 DRY INGREDIENTS AREA", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085665" },
+                { "System Address ( Node : Card : Device )": "003:002:0419", "Location Text": "PULL DOOR 26 BLDG 4", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839085924" },
+                { "System Address ( Node : Card : Device )": "003:002:0421", "Location Text": "PULL DOOR 24 BLDG 3 1ST FLR STAIRS", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839066060" },
+                { "System Address ( Node : Card : Device )": "003:002:0416", "Location Text": "PULL DOOR 53 BLDG 4  NORTH", "Device Type ID": 11, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839070081" },
+                { "System Address ( Node : Card : Device )": "003:002:0213", "Location Text": "3RD FLR BLDG 3 FLAMELES VNT SYS 2600 FAULT", "Device Type ID": 6, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4808021250" },
+                { "System Address ( Node : Card : Device )": "002:002:0133", "Location Text": "SHUTOFF TAMPER BLDG 14 WF 11&13", "Device Type ID": 7, "SKU": "SIGA-CT1", "SKU Description": "Single Input Module", "Serial Number": "4839086686" },
+                { "System Address ( Node : Card : Device )": "003:002:0408", "Location Text": "STROBE 6 2ND FLR MEZZANNE", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092944218" },
+                { "System Address ( Node : Card : Device )": "002:002:0142", "Location Text": "AUDIO 7 RAIL", "Device Type ID": 50, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5090330815" },
+                { "System Address ( Node : Card : Device )": "002:002:0141", "Location Text": "AUDIBLE 1-2-141", "Device Type ID": 50, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5091923375" },
+                { "System Address ( Node : Card : Device )": "003:002:0406", "Location Text": "STROBE 4 IN DRY INGREDIENTS", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092905523" },
+                { "System Address ( Node : Card : Device )": "003:002:0410", "Location Text": "STROBE 7 2ND FLR FANCY FEAST", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5067393713" },
+                { "System Address ( Node : Card : Device )": "002:002:0135", "Location Text": "CC1S FOR STROBE BY FORK LIFT MAINT", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092944713" },
+                { "System Address ( Node : Card : Device )": "001:002:0199", "Location Text": "CC1S FOR STROBE BY P4 STROBES BY QA LAB", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5064246722" },
+                { "System Address ( Node : Card : Device )": "003:002:0207", "Location Text": "STROBE BUILDING 19/21", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5064604867" },
+                { "System Address ( Node : Card : Device )": "001:002:0182", "Location Text": "CAB3 CC1S FOR STROBE IN SOUTH WAREHOUSE", "Device Type ID": 56, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092905448" },
+                { "System Address ( Node : Card : Device )": "003:002:0166", "Location Text": "STROBE 3RD FLR ELECTRIC RM", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092904809" },
+                { "System Address ( Node : Card : Device )": "003:002:0407", "Location Text": "STROBE 5 IN COMPRESSOR RM", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092904885" },
+                { "System Address ( Node : Card : Device )": "003:002:0134", "Location Text": "STROBE IN FINSHED PRODUCT", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092904595" },
+                { "System Address ( Node : Card : Device )": "001:002:0183", "Location Text": "CAB1 CC1S FOR STROBE \nBY TIMECLOCKS", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5074081481" },
+                { "System Address ( Node : Card : Device )": "003:002:0165", "Location Text": "STROBE 2ND FLR BY ELECT RM", "Device Type ID": 57, "SKU": "SIGA-CC1S", "SKU Description": "Auto Sync Output Module", "Serial Number": "5092944232" },
+                { "System Address ( Node : Card : Device )": "003:002:0479", "Location Text": "AUDIO 9 4", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774099" },
+                { "System Address ( Node : Card : Device )": "003:002:0472", "Location Text": "AUDIO 6 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774440" },
+                { "System Address ( Node : Card : Device )": "003:002:0137", "Location Text": "407 AUDIO 3 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774181" },
+                { "System Address ( Node : Card : Device )": "003:002:0482", "Location Text": "AUDIO 4 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792581" },
+                { "System Address ( Node : Card : Device )": "002:002:0137", "Location Text": "430 AUDIO 2 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774082" },
+                { "System Address ( Node : Card : Device )": "002:002:0151", "Location Text": "AUDIO BLDG 19 7", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774860" },
+                { "System Address ( Node : Card : Device )": "001:002:0187", "Location Text": "442 AUDIO SPARE", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774105" },
+                { "System Address ( Node : Card : Device )": "003:002:0473", "Location Text": "AUDIO 6 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774280" },
+                { "System Address ( Node : Card : Device )": "003:002:0384", "Location Text": "AUDIO 9 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792406" },
+                { "System Address ( Node : Card : Device )": "003:002:0181", "Location Text": "AUDIO 3RD", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774174" },
+                { "System Address ( Node : Card : Device )": "003:002:0173", "Location Text": "AUDIO 8 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774044" },
+                { "System Address ( Node : Card : Device )": "001:002:0186", "Location Text": "441 AUDIO 4 1-2-186", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774402" },
+                { "System Address ( Node : Card : Device )": "003:002:0466", "Location Text": "AUDIO 5 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774501" },
+                { "System Address ( Node : Card : Device )": "003:002:0139", "Location Text": "409 AUDIO 3 5", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774389" },
+                { "System Address ( Node : Card : Device )": "003:002:0178", "Location Text": "AUDIO 7 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774228" },
+                { "System Address ( Node : Card : Device )": "003:002:0177", "Location Text": "AUDIO 2NDFL", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774709" },
+                { "System Address ( Node : Card : Device )": "001:002:0185", "Location Text": "440 AUDIO 3 1-2-185", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774976" },
+                { "System Address ( Node : Card : Device )": "003:002:0471", "Location Text": "AUDIO 6 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774341" },
+                { "System Address ( Node : Card : Device )": "002:002:0136", "Location Text": "429 AUDIO 1 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792741" },
+                { "System Address ( Node : Card : Device )": "003:002:0470", "Location Text": "AUDIO DRY SPARE", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774648" },
+                { "System Address ( Node : Card : Device )": "003:002:0136", "Location Text": "406 AUDIO 3 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774631" },
+                { "System Address ( Node : Card : Device )": "003:002:0175", "Location Text": "AUDIO 8 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092773863" },
+                { "System Address ( Node : Card : Device )": "001:002:0196", "Location Text": "AUDIBLE 1-2-196", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774396" },
+                { "System Address ( Node : Card : Device )": "003:002:0465", "Location Text": "AUDIO 5 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774884" },
+                { "System Address ( Node : Card : Device )": "003:002:0174", "Location Text": "AUDIO 8 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092773924" },
+                { "System Address ( Node : Card : Device )": "003:002:0138", "Location Text": "408 AUDIO 3 4", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792840" },
+                { "System Address ( Node : Card : Device )": "003:002:0474", "Location Text": "AUDIO FINIS SPARE", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774969" },
+                { "System Address ( Node : Card : Device )": "003:002:0176", "Location Text": "AUDIO 8 4", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092776093" },
+                { "System Address ( Node : Card : Device )": "003:002:0135", "Location Text": "405 AUDIO 3 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792000" },
+                { "System Address ( Node : Card : Device )": "003:002:0477", "Location Text": "AUDIO MEZZA SPARE", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792284" },
+                { "System Address ( Node : Card : Device )": "003:002:0467", "Location Text": "AUDIO 5 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774112" },
+                { "System Address ( Node : Card : Device )": "003:002:0468", "Location Text": "AUDIO 5 4", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774235" },
+                { "System Address ( Node : Card : Device )": "003:002:0155", "Location Text": "410 AUDIO 3 6", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774020" },
+                { "System Address ( Node : Card : Device )": "002:002:0138", "Location Text": "431 AUDIO 3 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092773931" },
+                { "System Address ( Node : Card : Device )": "003:002:0179", "Location Text": "AUDIO 7 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774525" },
+                { "System Address ( Node : Card : Device )": "003:002:0469", "Location Text": "AUDIO 5 5", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092776277" },
+                { "System Address ( Node : Card : Device )": "002:002:0139", "Location Text": "432 AUDIO 4 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092773948" },
+                { "System Address ( Node : Card : Device )": "003:002:0481", "Location Text": "AUDIO 4 2", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092776086" },
+                { "System Address ( Node : Card : Device )": "003:002:0480", "Location Text": "AUDIO 4 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092773917" },
+                { "System Address ( Node : Card : Device )": "002:002:0140", "Location Text": "AUDIO BLDG 19 20", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092792574" },
+                { "System Address ( Node : Card : Device )": "001:002:0184", "Location Text": "439 AUDIO 2 1-2-184", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774853" },
+                { "System Address ( Node : Card : Device )": "003:002:0180", "Location Text": "AUDIO 7 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774013" },
+                { "System Address ( Node : Card : Device )": "003:002:0483", "Location Text": "AUDIO FANCY SPARE", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774204" },
+                { "System Address ( Node : Card : Device )": "003:002:0475", "Location Text": "AUDIO 9 1", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774075" },
+                { "System Address ( Node : Card : Device )": "003:002:0431", "Location Text": "AUDIO 9 3", "Device Type ID": 50, "SKU": "SIGA-MCC1", "SKU Description": "Single Input Signal Module", "Serial Number": "5092774334" },
+                { "System Address ( Node : Card : Device )": "001:002:0158", "Location Text": "ALARM RELAY OUTPUT", "Device Type ID": 151, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5278579968" },
+                { "System Address ( Node : Card : Device )": "003:002:0443", "Location Text": "RELAY HAT FREIGHT ELEV UNSAFE", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5229224367" },
+                { "System Address ( Node : Card : Device )": "001:002:0174", "Location Text": "RELAY ELEV MECH ROOM ELEV SHUNT", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5224360664" },
+                { "System Address ( Node : Card : Device )": "001:002:0193", "Location Text": "RELAY ELEV MECH ROOM HAT", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5225015365" },
+                { "System Address ( Node : Card : Device )": "001:002:0130", "Location Text": "DAMPER1 LR", "Device Type ID": 33, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5221264132" },
+                { "System Address ( Node : Card : Device )": "003:002:0387", "Location Text": "RELAY AMMONIA BLUE LITE MANITENECE PANEL", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5281991191" },
+                { "System Address ( Node : Card : Device )": "001:002:0159", "Location Text": "RELAY FOR DOOR HOLDER", "Device Type ID": 34, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5285303532" },
+                { "System Address ( Node : Card : Device )": "001:002:0194", "Location Text": "RELAY ELEV MECH ROOM SECONDARY RECALL", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5224358432" },
+                { "System Address ( Node : Card : Device )": "003:002:0439", "Location Text": "RELAY ALT RECALL FREIGHT ELEV", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5229224145" },
+                { "System Address ( Node : Card : Device )": "003:002:0438", "Location Text": "RELAY SHUNT FREIGHT ELEV", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5229184609" },
+                { "System Address ( Node : Card : Device )": "003:002:0444", "Location Text": "RELAY MAIN RECALL FREIGHT ELEV", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5229899299" },
+                { "System Address ( Node : Card : Device )": "001:002:0195", "Location Text": "RELAY ELEV MECH ROOM PRIMARY RECALL", "Device Type ID": 44, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5224358746" },
+                { "System Address ( Node : Card : Device )": "003:002:0404", "Location Text": "RELAY 3-2-404", "Device Type ID": 151, "SKU": "SIGA-CR", "SKU Description": "Control Relay Module", "Serial Number": "5280764024" },
+                { "System Address ( Node : Card : Device )": "003:002:0440", "Location Text": "BLDG 4 OLD SERVER PANEL ALARM", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4949948386" },
+                { "System Address ( Node : Card : Device )": "003:002:0433", "Location Text": "WATERFLOW DRY BY DOOR 25", "Device Type ID": 17, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4925880907" },
+                { "System Address ( Node : Card : Device )": "003:002:0191", "Location Text": "RELAY EOL", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4944786440" },
+                { "System Address ( Node : Card : Device )": "002:002:0156", "Location Text": "WATERFLOW 11 BLDG 14", "Device Type ID": 17, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947349208" },
+                { "System Address ( Node : Card : Device )": "003:002:0145", "Location Text": "WATERFLOW 2 BLDG 6", "Device Type ID": 17, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4923924320" },
+                { "System Address ( Node : Card : Device )": "002:002:0164", "Location Text": "PUMP ROOM TAMPER T2", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4927507604" },
+                { "System Address ( Node : Card : Device )": "003:002:0394", "Location Text": "RELAY EOL 3-4.3 BLDG1 SPARE", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947067867" },
+                { "System Address ( Node : Card : Device )": "002:002:0167", "Location Text": "WATERFLOW BLDG. 21 / N.E. BLDG 14 RISER", "Device Type ID": 17, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929176105" },
+                { "System Address ( Node : Card : Device )": "001:002:0126", "Location Text": "620 SERVER RM SUPRESSION PNL", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947094689" },
+                { "System Address ( Node : Card : Device )": "003:002:0197", "Location Text": "NORTH DUCT AHU3 BUILDING 21", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929170226" },
+                { "System Address ( Node : Card : Device )": "002:002:0160", "Location Text": "TAMPER OUTSIDE PUMP HOUSE PIV1", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4926723401" },
+                { "System Address ( Node : Card : Device )": "003:002:0208", "Location Text": "NORTH DUCT AHU2 BUILDING 21", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929176129" },
+                { "System Address ( Node : Card : Device )": "002:002:0158", "Location Text": "TAMPER FOR WF11 BLDG 14", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4944394348" },
+                { "System Address ( Node : Card : Device )": "003:002:0185", "Location Text": "RISER#1 LOOP#2   ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4949948249" },
+                { "System Address ( Node : Card : Device )": "001:002:0171", "Location Text": "704 TAMPER FOR WF 6  SPRINKLE RM BY SEC RM", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4922462748" },
+                { "System Address ( Node : Card : Device )": "003:002:0209", "Location Text": "NORTH DUCT AHU2 BUILDING 21", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929176136" },
+                { "System Address ( Node : Card : Device )": "003:002:0186", "Location Text": "RISER#1 LOOP#1 GUAGE ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4949948256" },
+                { "System Address ( Node : Card : Device )": "001:002:0172", "Location Text": "705 TAMPER FOR WF 6  SPRINKLE RM BY SEC RM", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4922462755" },
+                { "System Address ( Node : Card : Device )": "002:002:0157", "Location Text": "WATERFLOW BLDG 14", "Device Type ID": 17, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947349215" },
+                { "System Address ( Node : Card : Device )": "003:002:0395", "Location Text": "RELAY 4-1.4 BLDG1 LOADER/UNLOADER AREA", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947067874" },
+                { "System Address ( Node : Card : Device )": "001:002:0127", "Location Text": "621 SERVER RM        LEIBERT SYSTEM", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947094696" },
+                { "System Address ( Node : Card : Device )": "002:002:0165", "Location Text": "PUMP ROOM TAMPER T1", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4927507611" },
+                { "System Address ( Node : Card : Device )": "002:002:0161", "Location Text": "TAMPER OUTSIDE PUMP HOUSE PIV2", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4926723418" },
+                { "System Address ( Node : Card : Device )": "003:002:0434", "Location Text": "SPARE INPUT WATERFLOW DRY BY DOOR 25", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4925880914" },
+                { "System Address ( Node : Card : Device )": "002:002:0168", "Location Text": "TAMPER BLDG. 21 / N.E. BLDG 14 RISER", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929176112" },
+                { "System Address ( Node : Card : Device )": "003:002:0146", "Location Text": "WATERFLOW 1 BLDG 6GA", "Device Type ID": 17, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4923924337" },
+                { "System Address ( Node : Card : Device )": "003:002:0441", "Location Text": "BLDG 4 OLD SERVER PNL DEVICE TROUBLE", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4949948393" },
+                { "System Address ( Node : Card : Device )": "002:002:0159", "Location Text": "TAMPER FOR WF13  BLDG 14", "Device Type ID": 7, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4944394355" },
+                { "System Address ( Node : Card : Device )": "003:002:0192", "Location Text": "SUPERVISORY RISER 1 ANTIFREEZE", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4944786457" },
+                { "System Address ( Node : Card : Device )": "003:002:0198", "Location Text": "NORTH DUCT AHU3 BUILDING 21", "Device Type ID": 6, "SKU": "SIGA-CT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929170233" },
+                { "System Address ( Node : Card : Device )": "001:002:0153", "Location Text": "SUPERVISORY PROPANE TANK PANEL", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947322720" },
+                { "System Address ( Node : Card : Device )": "003:002:0153", "Location Text": "713 SPARE", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947128100" },
+                { "System Address ( Node : Card : Device )": "001:002:0155", "Location Text": "PROPANE PANEL SPARE INPUT", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947128964" },
+                { "System Address ( Node : Card : Device )": "003:002:0149", "Location Text": "709 TAMPER FOR WF 1  BLDG 6", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4948366167" },
+                { "System Address ( Node : Card : Device )": "001:002:0139", "Location Text": "WATERFLOW WF#7 PREACTION PANEL ALARM", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129107" },
+                { "System Address ( Node : Card : Device )": "002:002:0149", "Location Text": "MAIN FIRE PUMP CONTROLER PUMP HOUSE", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929376581" },
+                { "System Address ( Node : Card : Device )": "001:002:0175", "Location Text": "TEMP SENSOR SPRINKLER RM BY#5 AND #6 WF", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947326148" },
+                { "System Address ( Node : Card : Device )": "001:002:0147", "Location Text": "1ST FLR AMMONIA ROOM VENT SENSOR", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4948366488" },
+                { "System Address ( Node : Card : Device )": "003:002:0147", "Location Text": "WATERFLOW 112 10 BLDG 6", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129701" },
+                { "System Address ( Node : Card : Device )": "001:002:0165", "Location Text": "TAMPER PIV#8 OUTSIDE BLDG 14", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947321884" },
+                { "System Address ( Node : Card : Device )": "003:002:0151", "Location Text": "711 TAMPER FOR WF 10 BLDG 6", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129381" },
+                { "System Address ( Node : Card : Device )": "002:002:0147", "Location Text": "MAIN FIRE PUMP FALURE PUMP HOUSE", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929827229" },
+                { "System Address ( Node : Card : Device )": "001:002:0149", "Location Text": "PULL DOOR 11 BLDG 12 ANMONIA ROOM", "Device Type ID": 11, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4948364408" },
+                { "System Address ( Node : Card : Device )": "002:002:0144", "Location Text": "TAMPER PUMP HOUSE T12", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929822064" },
+                { "System Address ( Node : Card : Device )": "002:002:0145", "Location Text": "TEMP ALARM PUMP HOUSE", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929821661" },
+                { "System Address ( Node : Card : Device )": "001:002:0167", "Location Text": "LOW AIR RISER DRY SYSTEM", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947323642" },
+                { "System Address ( Node : Card : Device )": "001:002:0169", "Location Text": "WATERFLOW 5 SPRINKLE RM BY SECURITY OFFICE", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4930217224" },
+                { "System Address ( Node : Card : Device )": "003:002:0187", "Location Text": "633 RISER#1 LOOP#6   ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947695800" },
+                { "System Address ( Node : Card : Device )": "001:002:0163", "Location Text": "WATERFLOW 9 BATTERY  CHARGER AERA BLDG 14", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4948364347" },
+                { "System Address ( Node : Card : Device )": "003:002:0189", "Location Text": "635 RISER#1 LOOP#7   ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947321785" },
+                { "System Address ( Node : Card : Device )": "001:002:0145", "Location Text": "1ST FLR AMMONIA ALARM IN FREEZER", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947326124" },
+                { "System Address ( Node : Card : Device )": "001:002:0151", "Location Text": "1ST FLR AMMONIA ROOM SPARE INPUT", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4948364149" },
+                { "System Address ( Node : Card : Device )": "002:002:0171", "Location Text": "TAMPER PUMP HOUSE PIVS", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4929825423" },
+                { "System Address ( Node : Card : Device )": "001:002:0143", "Location Text": "TEMPATURE MONITOR IN WF 7 ROOM", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947128087" },
+                { "System Address ( Node : Card : Device )": "001:002:0141", "Location Text": "PREACTION  PANEL TROUBLE IN WF 7 ROOM", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129466" },
+                { "System Address ( Node : Card : Device )": "001:002:0161", "Location Text": "WATERFLOW 4  BATTERY CHARGER AERA BLDG 14", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 1 )", "SKU Description": "Dual Input Module", "Serial Number": "4948365962" },
+                { "System Address ( Node : Card : Device )": "003:002:0190", "Location Text": "636 RISER#1 LOOP#3   ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947321792" },
+                { "System Address ( Node : Card : Device )": "001:002:0152", "Location Text": "1ST FLR AMMONIA ROOM SPARE INPUT", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4948364156" },
+                { "System Address ( Node : Card : Device )": "002:002:0148", "Location Text": "MAIN FIRE PUMP RUNNING PUMP HOUSES", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929827236" },
+                { "System Address ( Node : Card : Device )": "003:002:0188", "Location Text": "634 RISER#1 LOOP#5   ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947695817" },
+                { "System Address ( Node : Card : Device )": "002:002:0172", "Location Text": "PUMP HOUSE 3 TAMPERS", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929825430" },
+                { "System Address ( Node : Card : Device )": "001:002:0150", "Location Text": "1ST FLR AMMONIA ROOM SPARE INPUT", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4948364415" },
+                { "System Address ( Node : Card : Device )": "001:002:0146", "Location Text": "1ST FLR AMMONIA ROOM ALARM IN FREEZER DOCK", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947326131" },
+                { "System Address ( Node : Card : Device )": "002:002:0146", "Location Text": "PULL PUMP HOUSE", "Device Type ID": 11, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929821678" },
+                { "System Address ( Node : Card : Device )": "001:002:0144", "Location Text": "TAMPER 1ST FLR FOR WF 7 FREEZER BLDG", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947128094" },
+                { "System Address ( Node : Card : Device )": "001:002:0154", "Location Text": "PULL 1ST FLR IN PROPANE INSIDE GAGE AERA", "Device Type ID": 11, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947322737" },
+                { "System Address ( Node : Card : Device )": "001:002:0176", "Location Text": "TAMPER RISER#5 LOOP#1 ANTIFREEZE SWITCH", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947326155" },
+                { "System Address ( Node : Card : Device )": "001:002:0170", "Location Text": "WATERFLOW 6 SPRINKLE RM BY SECURITY OFFICE", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4930217231" },
+                { "System Address ( Node : Card : Device )": "002:002:0166", "Location Text": "WATERFLOW PUMP HOUSE", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929822071" },
+                { "System Address ( Node : Card : Device )": "003:002:0150", "Location Text": "710 TAMPER FOR WF 2  BLDG 6", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4948366174" },
+                { "System Address ( Node : Card : Device )": "003:002:0148", "Location Text": "WATERFLOW 113 3 BLDG 6", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129718" },
+                { "System Address ( Node : Card : Device )": "001:002:0148", "Location Text": "1ST FLR AMMONIA ROOM COMPRESSOR", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4948366495" },
+                { "System Address ( Node : Card : Device )": "001:002:0168", "Location Text": "TAMPER RISER DRY LOOP #1\nDRY SYSTEM TAMPER", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947323659" },
+                { "System Address ( Node : Card : Device )": "001:002:0156", "Location Text": "SPARE IN PROPANE ROOM", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947128971" },
+                { "System Address ( Node : Card : Device )": "001:002:0162", "Location Text": "WATERFLOW 8 BATTERY CHARGER AERA BLDG 14", "Device Type ID": 17, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4948365979" },
+                { "System Address ( Node : Card : Device )": "001:002:0142", "Location Text": "SPARE IN WF 7 ROOM", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129473" },
+                { "System Address ( Node : Card : Device )": "001:002:0140", "Location Text": "SPARE IN WF 7 ROOM", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129114" },
+                { "System Address ( Node : Card : Device )": "001:002:0166", "Location Text": "TAMPER PIV#9 OUTSIDE  BLDG 14", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947321891" },
+                { "System Address ( Node : Card : Device )": "001:002:0164", "Location Text": "TAMPER PIV#4 OUTSIDE BLDG 14", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4948364354" },
+                { "System Address ( Node : Card : Device )": "002:002:0150", "Location Text": "PUMP HOUSE SPARE", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4929376598" },
+                { "System Address ( Node : Card : Device )": "003:002:0152", "Location Text": "712 TAMPER FOR WF 3  BLDG 6", "Device Type ID": 7, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947129398" },
+                { "System Address ( Node : Card : Device )": "003:002:0154", "Location Text": "640 SPARE", "Device Type ID": 6, "SKU": "SIGA-MCT2 ( Circuit 2 )", "SKU Description": "Dual Input Module", "Serial Number": "4947128117" },
+                { "System Address ( Node : Card : Device )": "003:002:0376", "Location Text": "PWR SPLY FOR DRY INGRED BLDG4", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413746" },
+                { "System Address ( Node : Card : Device )": "003:002:0161", "Location Text": "POWER SUPPLY 3RDFL", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902415023" },
+                { "System Address ( Node : Card : Device )": "002:002:0126", "Location Text": "502 PWR SPLY FOR RAIL DOCK  BLDG 15", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413340" },
+                { "System Address ( Node : Card : Device )": "003:002:0380", "Location Text": "PWR SPLY FOR MEZZ 2ND FL BLDG 2", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4964412480" },
+                { "System Address ( Node : Card : Device )": "003:002:0382", "Location Text": "PWR SPLY  FANCY  FEAST 2ND FL BLDG 5", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902415603" },
+                { "System Address ( Node : Card : Device )": "003:002:0159", "Location Text": "POWER SUPPLY 2NDFL", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4964413241" },
+                { "System Address ( Node : Card : Device )": "001:002:0177", "Location Text": "500 PWR SPLY FOR EMPTY CAN  BLDG 7", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413647" },
+                { "System Address ( Node : Card : Device )": "003:002:0127", "Location Text": "POWER SUPPLY FOR FINISH PROD BLDG 6", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413029" },
+                { "System Address ( Node : Card : Device )": "003:002:0378", "Location Text": "PWR SPLY COMPRES BLDG 2A", "Device Type ID": 56, "SKU": "SIGA-APS ( AC/Battery Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413265" },
+                { "System Address ( Node : Card : Device )": "001:002:0178", "Location Text": "501 PWR SPLY FOR EMPTY CAN  BLDG 7", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413654" },
+                { "System Address ( Node : Card : Device )": "003:002:0379", "Location Text": "PWR SPLY COMPRES BLDG 2A", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413272" },
+                { "System Address ( Node : Card : Device )": "003:002:0160", "Location Text": "POWER SUPPLY 2ND FLOOR", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4964413258" },
+                { "System Address ( Node : Card : Device )": "003:002:0162", "Location Text": "POWER SUPPLY 2ND FLOOR", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902415030" },
+                { "System Address ( Node : Card : Device )": "003:002:0128", "Location Text": "POWER SUPPLY FOR FINISH PROD BLDG 6", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413036" },
+                { "System Address ( Node : Card : Device )": "003:002:0377", "Location Text": "PWR SPLY FOR DRY INGRED BLDG4", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413753" },
+                { "System Address ( Node : Card : Device )": "003:002:0381", "Location Text": "PWR SPLY FOR MEZZ 2ND FL BLDG 2", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4964412497" },
+                { "System Address ( Node : Card : Device )": "003:002:0383", "Location Text": "PWR SPLY  FANCY  FEAST 2ND FL BLDG 5", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902415610" },
+                { "System Address ( Node : Card : Device )": "002:002:0127", "Location Text": "503 PWR SPLY FOR RAIL DOCK  BLDG 15", "Device Type ID": 56, "SKU": "SIGA-APS ( NAC/Ground Fault )", "SKU Description": "Auxilliary Power Supply Module", "Serial Number": "4902413357" },
+                { "System Address ( Node : Card : Device )": "003:002:0400", "Location Text": "MEZZ 2 AMP AMP 18 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA30 ( Channel 1 )", "SKU Description": "30W Intelligent Audio Amplifier", "Serial Number": "5101189005" },
+                { "System Address ( Node : Card : Device )": "003:002:0183", "Location Text": "AUDIO AMP 23 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA30 ( Channel 1 )", "SKU Description": "30W Intelligent Audio Amplifier", "Serial Number": "5101188824" },
+                { "System Address ( Node : Card : Device )": "003:002:0392", "Location Text": "COMPRESSOR AMP 11 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA30 ( Channel 1 )", "SKU Description": "30W Intelligent Audio Amplifier", "Serial Number": "5101189821" },
+                { "System Address ( Node : Card : Device )": "003:002:0401", "Location Text": "MEZZ 2 AMP 18 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA30 ( Channel 2 )", "SKU Description": "30W Intelligent Audio Amplifier", "Serial Number": "5101189012" },
+                { "System Address ( Node : Card : Device )": "003:002:0393", "Location Text": "COMPRESSOR 2 AMP 12 CH2", "Device Type ID": 50, "SKU": "SIGA-AA30 ( Channel 2 )", "SKU Description": "30W Intelligent Audio Amplifier", "Serial Number": "5101189838" },
+                { "System Address ( Node : Card : Device )": "003:002:0184", "Location Text": "AUDIO AMP 24 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA30 ( Channel 2 )", "SKU Description": "30W Intelligent Audio Amplifier", "Serial Number": "5101188831" },
+                { "System Address ( Node : Card : Device )": "003:002:0129", "Location Text": "AA50 FINISH WHRS1 AMP 6 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101192944" },
+                { "System Address ( Node : Card : Device )": "003:002:0205", "Location Text": "AUDIBLE BUILDING 21 A7", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5103496729" },
+                { "System Address ( Node : Card : Device )": "003:002:0390", "Location Text": "MEZZ AMP 9 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101194085" },
+                { "System Address ( Node : Card : Device )": "003:002:0131", "Location Text": "AA50 FINISH WHRS3 AMP 8 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101203862" },
+                { "System Address ( Node : Card : Device )": "003:002:0163", "Location Text": "AUDIO AMP 21 AMP 22 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101192500" },
+                { "System Address ( Node : Card : Device )": "002:002:0128", "Location Text": "332 AA50 RAIL AMP 3 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101203787" },
+                { "System Address ( Node : Card : Device )": "001:002:0200", "Location Text": "AMP AA50 BY QA A LAB ", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5103502482" },
+                { "System Address ( Node : Card : Device )": "003:002:0402", "Location Text": "FANCY AMP 19 CH1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101203763" },
+                { "System Address ( Node : Card : Device )": "003:002:0203", "Location Text": "AUDIBLE BUILDING 19 A2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5103496248" },
+                { "System Address ( Node : Card : Device )": "003:002:0396", "Location Text": "DRY AMP 13 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101194009" },
+                { "System Address ( Node : Card : Device )": "003:002:0398", "Location Text": "DRY AMP 15 CH 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101193224" },
+                { "System Address ( Node : Card : Device )": "001:002:0179", "Location Text": "330 AA50 CAN AMP 1", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 1 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101192906" },
+                { "System Address ( Node : Card : Device )": "001:002:0201", "Location Text": "AMP BY QA A LAB", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5103502499" },
+                { "System Address ( Node : Card : Device )": "003:002:0204", "Location Text": "AUDIBLE BUILDING 19 A2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5103496255" },
+                { "System Address ( Node : Card : Device )": "003:002:0206", "Location Text": "AUDIBLE BUILDING 21 A7", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5103496736" },
+                { "System Address ( Node : Card : Device )": "003:002:0164", "Location Text": "AUDIBLE AMP 22 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101192517" },
+                { "System Address ( Node : Card : Device )": "003:002:0391", "Location Text": "MEZZ AMP 9 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101194092" },
+                { "System Address ( Node : Card : Device )": "003:002:0397", "Location Text": "DRY 1 AMP 13 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101194016" },
+                { "System Address ( Node : Card : Device )": "003:002:0399", "Location Text": "DRY 3 AMP 15 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101193231" },
+                { "System Address ( Node : Card : Device )": "002:002:0129", "Location Text": "333 AA50 RAIL 2 AMP 4 CH2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101203794" },
+                { "System Address ( Node : Card : Device )": "003:002:0403", "Location Text": "FANCY AMP 19 CH2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101203770" },
+                { "System Address ( Node : Card : Device )": "001:002:0180", "Location Text": "331 AA50 CAN2 AMP 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101192913" },
+                { "System Address ( Node : Card : Device )": "003:002:0132", "Location Text": "AUDIBLE FINISH WHRS4 AMP 8 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101203879" },
+                { "System Address ( Node : Card : Device )": "003:002:0130", "Location Text": "AUDIBLE FINISH WHRS2 AMP 6 CH 2", "Device Type ID": 50, "SKU": "SIGA-AA50 ( Channel 2 )", "SKU Description": "50W Intelligent Audio Amplifier", "Serial Number": "5101192951" },
+                { "System Address ( Node : Card : Device )": "001:002:0001", "Location Text": "SMOKE 1ST FLR SECURITY RM PANEL", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3952617159" },
+                { "System Address ( Node : Card : Device )": "003:002:0003", "Location Text": "SMOKE ABOVE MAINTENANCE FIRE ALARM PANEL 3", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956373969" },
+                { "System Address ( Node : Card : Device )": "003:002:0252", "Location Text": "SMOKE MCCR", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956375918" },
+                { "System Address ( Node : Card : Device )": "002:002:0003", "Location Text": "SMOKE E LIFT MAINTANCE", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3978018848" },
+                { "System Address ( Node : Card : Device )": "003:002:0001", "Location Text": "SMOKE MCC A", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956372375" },
+                { "System Address ( Node : Card : Device )": "003:002:0256", "Location Text": "SMOKE MCCL", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956375048" },
+                { "System Address ( Node : Card : Device )": "002:002:0002", "Location Text": "SMOKE E LIFT MAINTANCE", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3978015984" },
+                { "System Address ( Node : Card : Device )": "003:002:0255", "Location Text": "SMOKE MCCL", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956621527" },
+                { "System Address ( Node : Card : Device )": "002:002:0001", "Location Text": "SMOKE ABOVE WAREHOUSE FIRE ALARM PANEL 2", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3968227892" },
+                { "System Address ( Node : Card : Device )": "003:002:0253", "Location Text": "SMOKE MCCQ", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3952617357" },
+                { "System Address ( Node : Card : Device )": "003:002:0257", "Location Text": "SMOKE MCCR", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956374676" },
+                { "System Address ( Node : Card : Device )": "003:002:0002", "Location Text": "SMOKE MCC A", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3956373075" },
+                { "System Address ( Node : Card : Device )": "003:002:0254", "Location Text": "SMOKE MCCQ", "Device Type ID": 12, "SKU": "SIGA-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3952645435" },
+                { "System Address ( Node : Card : Device )": "001:002:0004", "Location Text": "DUCT 1-2-4 LR", "Device Type ID": 6, "SKU": "SIGA-SD", "SKU Description": "SuperDuct Smoke Detector", "Serial Number": "3906672876" },
+                { "System Address ( Node : Card : Device )": "003:002:0265", "Location Text": "HEAT TOP OF SHAFT FREIGHT ELEV", "Device Type ID": 10, "SKU": "SIGA-HRD", "SKU Description": "Fixed Temp Heat Detector", "Serial Number": "3835132069" },
+                { "System Address ( Node : Card : Device )": "003:002:0266", "Location Text": "HEAT TOP OF SHAFT FREIGHT ELEV", "Device Type ID": 10, "SKU": "SIGA-HRD", "SKU Description": "Fixed Temp Heat Detector", "Serial Number": "3835129823" },
+                { "System Address ( Node : Card : Device )": "003:002:0264", "Location Text": "HEAT 1ST FLR FREIGHT ELEV MECH ROOM", "Device Type ID": 10, "SKU": "SIGA-HRD", "SKU Description": "Fixed Temp Heat Detector", "Serial Number": "3835139822" },
+                { "System Address ( Node : Card : Device )": "001:002:0011", "Location Text": "1ST FLR HEAT ELEV MECH RM ELEVATROR SHUNT", "Device Type ID": 10, "SKU": "SIGA-HRD", "SKU Description": "Fixed Temp Heat Detector", "Serial Number": "3831777844" },
+                { "System Address ( Node : Card : Device )": "003:002:0263", "Location Text": "SMOKE TOP OF FREIGHT ELEV SHAFT", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3968330707" },
+                { "System Address ( Node : Card : Device )": "001:002:0008", "Location Text": "SMOKE 1ST FLR ROOM 105 OFFICE", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935013985" },
+                { "System Address ( Node : Card : Device )": "001:002:0012", "Location Text": "1ST FLR SMOKE ELEV MECH RM SECONDARY RECAL", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3956439122" },
+                { "System Address ( Node : Card : Device )": "001:002:0002", "Location Text": "SMOKE 2ND FLR WOMANS LOCKER ROOM", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935013466" },
+                { "System Address ( Node : Card : Device )": "001:002:0009", "Location Text": "SMOKE ROOM 106 AIRLOCK", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935013848" },
+                { "System Address ( Node : Card : Device )": "001:002:0007", "Location Text": "SMOKE 1ST FLR ROOM 104 TEAM LEAD OFFICE", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935012070" },
+                { "System Address ( Node : Card : Device )": "003:002:0261", "Location Text": "SMOKE 1ST FLR FREIGHT ELEV ALT RECALL", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3968655107" },
+                { "System Address ( Node : Card : Device )": "001:002:0010", "Location Text": "SMOKE 1ST FLR ROOM 109 UTILITY ROOM", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935014425" },
+                { "System Address ( Node : Card : Device )": "003:002:0251", "Location Text": "HEAT/TEMP SENSOR 40 DEGREES BOILER RM DR3", "Device Type ID": 12, "SKU": "SIGA-H2D", "SKU Description": "Fixed Temp Heat Detector", "Serial Number": "3908558376" },
+                { "System Address ( Node : Card : Device )": "003:002:0005", "Location Text": "SMOKE 3RD FLR BLDG 3 ELEC ROOM", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3955529756" },
+                { "System Address ( Node : Card : Device )": "001:002:0003", "Location Text": "SMOKE 2ND FLR WOMANS LOCKER R00M", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935094342" },
+                { "System Address ( Node : Card : Device )": "003:002:0259", "Location Text": "SMOKE TOP OF FREIGHT ELEV SHAFT", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3968662204" },
+                { "System Address ( Node : Card : Device )": "003:002:0260", "Location Text": "SMOKE 1ST FL FREIGHT ELEV MECH ROOM", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3968660675" },
+                { "System Address ( Node : Card : Device )": "001:002:0005", "Location Text": "SMOKE 1ST FLR ROOM 101 REVIEWS ROOM", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935015408" },
+                { "System Address ( Node : Card : Device )": "001:002:0013", "Location Text": "2ND FLR SMOKE ELEV LOBBY PRIMARY RECALL", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3967081266" },
+                { "System Address ( Node : Card : Device )": "001:002:0015", "Location Text": "SMOKE ABOVE POWER SUPPLY BY QA LAB", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3946122478" },
+                { "System Address ( Node : Card : Device )": "003:002:0262", "Location Text": "SMOKE 2ND FLR FREIGHT ELEV MAIN RECALL", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3968654957" },
+                { "System Address ( Node : Card : Device )": "001:002:0006", "Location Text": "SMOKE 1ST FLR ROOM 102 OFFICE", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3935013701" },
+                { "System Address ( Node : Card : Device )": "003:002:0004", "Location Text": "SMOKE ABOVE BPS PANEL BUILDING 19", "Device Type ID": 12, "SKU": "SIGA2-PS", "SKU Description": "Photoelectric smoke detector", "Serial Number": "3955529794" },
+                { "System Address ( Node : Card : Device )": "001:002:0014", "Location Text": "1ST FLR SMOKE ELEV LOBBY SECONDARY RECALL", "Device Type ID": 12, "SKU": "SIGA-OSD", "SKU Description": "Optical Smoke Detector", "Serial Number": "3956409903" },
+                { "System Address ( Node : Card : Device )": "003:002:0258", "Location Text": "HEAT/TEMP SENSOR 40 DEGREES BOILER RM DR6", "Device Type ID": 12, "SKU": "SIGA-H2D", "SKU Description": "Fixed Temp Heat Detector", "Serial Number": "3908558789" }
             ]
           }
         ];
@@ -339,11 +694,51 @@
         }
 
         function escapeHTML(str) {
-            if (typeof str !== 'string') return '';
+            if (str === null || str === undefined) return '';
             const p = document.createElement('p');
-            p.textContent = str;
+            p.textContent = String(str);
             return p.innerHTML;
         }
+
+        /**
+         * Converts any device object into a single, standardized format.
+         * This allows the table to display data from different sources seamlessly.
+         * @param {object} device - The original device object from the CHECKLISTS array.
+         * @returns {object} A new object with a consistent set of properties.
+         */
+        function normalizeDevice(device) {
+            // Check if the device is from an Excel/CSV import by looking for its unique column header.
+            const isExcelFormat = device.hasOwnProperty('System Address ( Node : Card : Device )');
+
+            if (isExcelFormat) {
+                // If it's Excel format, map its properties to the standard format.
+                const systemAddress = device['System Address ( Node : Card : Device )'] || 'N/A:N/A:N/A';
+                const addressParts = String(systemAddress).split(':');
+                return {
+                    loop: addressParts.length > 1 ? addressParts[1].trim() : '',
+                    address: addressParts.length > 2 ? addressParts[2].trim() : '',
+                    systemAddress: systemAddress,
+                    model: device['SKU'] || '',
+                    deviceType: device['SKU Description'] || '',
+                    deviceTypeID: device['Device Type ID'] || '',
+                    serialNumber: device['Serial Number'] || '',
+                    messages: (device['Location Text'] || '').replace(/\n/g, ' '), // Replace newlines for better display
+                };
+            } else {
+                // If it's the original SAS format, map its properties, leaving Excel-specific ones blank.
+                return {
+                    loop: device.loop || '',
+                    address: device.address || '',
+                    systemAddress: '', // This format doesn't have a 'System Address'
+                    model: device.model || '',
+                    deviceType: device.deviceType || '',
+                    deviceTypeID: '', // This format doesn't have a 'Device Type ID'
+                    serialNumber: device.serialNumber || '',
+                    messages: device.messages || '',
+                };
+            }
+        }
+
 
         function showToast(message, type = 'info') {
             const container = $('#toast-container');
@@ -521,18 +916,15 @@
                     checkedDevices: new Set(),
                     checkHistory: [],
                 };
-                // Bind the event handler once
                 this.handleMenuAction = this.handleMenuAction.bind(this);
             }
             static get observedAttributes() { return ['building-key']; }
 
             connectedCallback() {
-                // Listen for actions dispatched from the header menu
                 document.addEventListener('request-workspace-action', this.handleMenuAction);
             }
 
             disconnectedCallback() {
-                // Clean up listener when element is removed
                 document.removeEventListener('request-workspace-action', this.handleMenuAction);
             }
 
@@ -542,15 +934,20 @@
                     this.loadChecklist();
                 }
             }
+            
             getUniqueDeviceId(device) {
-                // Create a unique ID for a device based on its properties
-                return `${this.checklistKey}-${device.loop}-${device.address}-${device.serialNumber}`;
+                return `${this.checklistKey}-${device.serialNumber}-${device.loop}-${device.address}`;
             }
+
             loadChecklist() {
                 this.innerHTML = `<div class="text-center py-20">Loading checklist...</div>`;
                 try {
-                    this.data = CHECKLISTS.find(c => c.key === this.checklistKey);
-                    if (!this.data) throw new Error("Checklist not found.");
+                    const checklistData = CHECKLISTS.find(c => c.key === this.checklistKey);
+                    if (!checklistData) throw new Error("Checklist not found.");
+                    
+                    this.data = JSON.parse(JSON.stringify(checklistData));
+                    this.data.devices = this.data.devices.map(device => normalizeDevice(device));
+                    
                     this.loadInspectedState();
                     this.render();
                 } catch (error) {
@@ -559,6 +956,7 @@
                     console.error("Failed to load checklist:", error);
                 }
             }
+            
             loadInspectedState() {
                 const savedState = localStorage.getItem(`checklistState_${this.checklistKey}`);
                 if (savedState) {
@@ -571,6 +969,7 @@
                 }
                 this.updateLastCheckedFooter();
             }
+
             saveInspectedState() {
                 const appState = {
                     checked: Array.from(this.state.checkedDevices),
@@ -578,31 +977,33 @@
                 };
                 localStorage.setItem(`checklistState_${this.checklistKey}`, JSON.stringify(appState));
             }
+
             render() {
                 if (!this.data) return;
-                // Simplified render method, removed buttons and advanced actions
                 this.innerHTML = `
-                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 sm:p-6">
-                        <header class="mb-6">
+                    <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg">
+                        <header class="p-4 sm:p-6 border-b border-slate-200 dark:border-slate-800">
                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">${escapeHTML(this.data.name)}</h2>
                            <p class="text-slate-500 dark:text-slate-400">${escapeHTML(this.data.location)}</p>
                         </header>
-                        <div id="checklist-content" class="mt-6"></div>
+                        <div id="checklist-content" class="p-4 sm:p-6"></div>
                     </div>
                 `;
                 this.updateUI();
                 this.attachEventListeners();
             }
+
             renderChecklistContent() {
                 return `
                     <div id="progress-container" class="mb-4"></div>
                     <div class="my-4">
-                        <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                        <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
                     </div>
                     <div id="completed-container"></div>
-                    <div id="active-container" class="overflow-x-auto"></div>
+                    <div id="active-container" class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden"></div>
                 `;
             }
+
             updateProgress() {
                 const container = $(`#progress-container`, this);
                 if (!container) return;
@@ -619,28 +1020,35 @@
                     </div>
                 `;
             }
+
             renderTableAndAccordion() {
                 const contentContainer = $('#checklist-content', this);
                 if (!contentContainer) return;
                 contentContainer.innerHTML = this.renderChecklistContent();
+                
                 let allDevices = [...this.data.devices];
                 const { key, dir } = this.sortState;
                 if (key && dir) {
                     allDevices.sort((a, b) => {
                         const valA = a[key]?.toString() || '';
                         const valB = b[key]?.toString() || '';
-                        const comparison = valA.localeCompare(valB, undefined, { numeric: true });
+                        const comparison = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
                         return dir === 'asc' ? comparison : -comparison;
                     });
                 }
+                
                 const inspectedDevices = allDevices.filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
                 const activeDevices = allDevices.filter(d => !this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
+                
                 const completedContainer = $(`#completed-container`, this);
                 const activeContainer = $(`#active-container`, this);
+
                 if (completedContainer) completedContainer.innerHTML = this.renderAccordionHTML(inspectedDevices);
                 if (activeContainer) activeContainer.innerHTML = this.renderTableHTML(activeDevices, "Remaining Devices");
+                
                 this.updateProgress();
             }
+
             renderAccordionHTML(devices) {
                 if (devices.length === 0) return '';
                 return `
@@ -649,54 +1057,117 @@
                            <span>Completed Devices (${devices.length})</span>
                            <svg class="accordion-arrow w-5 h-5 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
-                        <div id="completed-list" class="hidden overflow-x-auto">
+                        <div id="completed-list" class="hidden overflow-hidden border-t border-slate-200 dark:border-slate-700">
                              ${this.renderTableHTML(devices)}
                         </div>
                     </div>
                 `;
             }
+
             renderTableHTML(devices, title) {
-                const headers = [{ key: 'loop', label: 'Loop' }, { key: 'address', label: 'Address' }, { key: 'model', label: 'Model' }, { key: 'serialNumber', label: 'Serial #' }, { key: 'messages', label: 'Location/Message' }];
+                const headers = [
+                    { key: 'systemAddress', label: 'Sys. Address' },
+                    { key: 'loop', label: 'Loop' },
+                    { key: 'address', label: 'Address' },
+                    { key: 'model', label: 'SKU/Model' },
+                    { key: 'deviceType', label: 'Type' },
+                    { key: 'deviceTypeID', label: 'Type ID' },
+                    { key: 'serialNumber', label: 'Serial #' },
+                    { key: 'messages', label: 'Location/Message' }
+                ];
                 let table = ``;
-                if (title) table += `<h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200">${title}</h3>`
+                if (title) table += `<h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200 px-4 pt-4 sm:px-0 sm:pt-0">${title}</h3>`;
                 table += `
-                    <table class="w-full text-sm text-left">
-                        <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800">
-                            <tr>
-                                ${headers.map(h => {
-                                    const sortDir = this.sortState.key === h.key ? this.sortState.dir : null;
-                                    const icon = sortDir === 'asc' ? '▲' : (sortDir === 'desc' ? '▼' : '');
-                                    return `<th scope="col" class="p-3 table-header-sortable cursor-pointer whitespace-nowrap" data-sort-key="${h.key}" ${sortDir ? `aria-sort="${sortDir === 'asc' ? 'ascending':'descending'}"` : ''}>${h.label} <svg class="inline w-3 h-3">${icon}</svg></th>`;
-                                }).join('')}
-                                <th scope="col" class="p-3 text-center">
-                                    <span class="sr-only">Inspected</span>✅
-                                </th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-slate-200 dark:divide-slate-700">
-                           ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr><td colspan="6" class="p-4 text-center text-slate-500">No devices to show.</td></tr>`}
-                        </tbody>
-                    </table>
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-sm text-left">
+                            <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800 hidden sm:table-header-group">
+                                <tr>
+                                    ${headers.map(h => {
+                                        const sortDir = this.sortState.key === h.key ? this.sortState.dir : null;
+                                        const icon = sortDir === 'asc' ? '▲' : (sortDir === 'desc' ? '▼' : '');
+                                        return `<th scope="col" class="p-3 table-header-sortable cursor-pointer whitespace-nowrap" data-sort-key="${h.key}" ${sortDir ? `aria-sort="${sortDir === 'asc' ? 'ascending':'descending'}"` : ''}>${h.label} <svg class="inline w-3 h-3">${icon}</svg></th>`;
+                                    }).join('')}
+                                    <th scope="col" class="p-3 text-center">
+                                        <span class="sr-only">Inspected</span>✅
+                                    </th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700 sm:divide-y-0">
+                               ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr class="device-row"><td colspan="${headers.length + 1}" class="sm:table-cell p-4 text-center text-slate-500">No devices to show.</td></tr>`}
+                            </tbody>
+                        </table>
+                    </div>
                 `;
                 return table;
             }
+
             renderRowHTML(device) {
                 const uniqueId = this.getUniqueDeviceId(device);
                 const isInspected = this.state.checkedDevices.has(uniqueId);
+                
+                // Mobile-first card layout, becomes a table row on 'sm' screens
                 return `
                     <tr data-device-id="${uniqueId}" class="device-row hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20' : ''}">
-                        <td class="p-3 font-medium whitespace-nowrap">${escapeHTML(String(device.loop))}</td>
-                        <td class="p-3 whitespace-nowrap">${escapeHTML(String(device.address))}</td>
-                        <td class="p-3 whitespace-nowrap">${escapeHTML(String(device.model))}</td>
-                        <td class="p-3 whitespace-nowrap">${escapeHTML(String(device.serialNumber))}</td>
-                        <td class="p-3 max-w-xs truncate" title="${escapeHTML(String(device.messages))}">${escapeHTML(String(device.messages))}</td>
-                        <td class="p-3 text-center">
+                        
+                        <!-- Mobile Card View -->
+                        <td class="sm:hidden w-full">
+                            <div class="flex items-start justify-between gap-4">
+                                <div class="flex-grow">
+                                    <p class="font-bold text-slate-800 dark:text-slate-100 truncate pr-2" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</p>
+                                    <p class="text-slate-600 dark:text-slate-400 text-xs">${escapeHTML(device.model)} - ${escapeHTML(device.deviceType)}</p>
+                                </div>
+                                <div class="flex-shrink-0">
+                                    <input type="checkbox" data-device-id="${uniqueId}" class="h-6 w-6 rounded border-slate-400 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
+                                </div>
+                            </div>
+                            <div class="mt-3">
+                                <button aria-expanded="false" class="details-toggle text-xs font-semibold text-sky-600 dark:text-sky-500 hover:underline flex items-center gap-1">
+                                    Show Details
+                                    <svg class="details-arrow w-3 h-3 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                                </button>
+                                <div class="device-details hidden mt-2 text-xs space-y-1 text-slate-500 dark:text-slate-400 border-l-2 border-slate-200 dark:border-slate-700 pl-3">
+                                    <p><strong>Sys. Address:</strong> ${escapeHTML(device.systemAddress) || 'N/A'}</p>
+                                    <p><strong>Loop/Address:</strong> ${escapeHTML(device.loop) || 'N/A'} / ${escapeHTML(device.address) || 'N/A'}</p>
+                                    <p><strong>Type ID:</strong> ${escapeHTML(device.deviceTypeID) || 'N/A'}</p>
+                                    <p><strong>Serial #:</strong> ${escapeHTML(device.serialNumber) || 'N/A'}</p>
+                                </div>
+                            </div>
+                        </td>
+
+                        <!-- Desktop Table Cells -->
+                        <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.systemAddress)}</td>
+                        <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.loop)}</td>
+                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.address)}</td>
+                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.model)}</td>
+                        <td class="hidden sm:table-cell p-3 max-w-xs truncate" title="${escapeHTML(device.deviceType)}">${escapeHTML(device.deviceType)}</td>
+                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.deviceTypeID)}</td>
+                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.serialNumber)}</td>
+                        <td class="hidden sm:table-cell p-3 max-w-xs truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
+                        <td class="hidden sm:table-cell p-3 text-center">
                             <input type="checkbox" data-device-id="${uniqueId}" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
                         </td>
                     </tr>
                 `;
             }
+
             attachEventListeners() {
+                this.addEventListener('click', (e) => {
+                    const row = e.target.closest('.device-row');
+                    const detailsToggle = e.target.closest('.details-toggle');
+
+                    if (detailsToggle) {
+                        e.stopPropagation(); // Prevent row click from firing
+                        const detailsContent = detailsToggle.nextElementSibling;
+                        const isExpanded = detailsToggle.getAttribute('aria-expanded') === 'true';
+                        detailsToggle.setAttribute('aria-expanded', String(!isExpanded));
+                        detailsToggle.firstChild.textContent = isExpanded ? 'Show Details' : 'Hide Details';
+                        if(detailsContent) detailsContent.classList.toggle('hidden');
+                        return;
+                    }
+                    
+                    if (row) return this.handleRowClick(row);
+                });
+                
                 this.addEventListener('click', (e) => {
                     const toggle = e.target.closest('.accordion-toggle');
                     if (toggle) {
@@ -709,27 +1180,24 @@
                     
                     const header = e.target.closest('.table-header-sortable');
                     if (header) return this.handleSort(header.dataset.sortKey);
-                    
-                    const row = e.target.closest('.device-row');
-                    if (row) return this.handleRowClick(row);
                 });
+
                 this.addEventListener('input', debounce((e) => {
                     if (e.target.id === 'search-input') this.filterTable(e.target.value);
                 }, 250));
             }
 
             handleMenuAction(event) {
-                // This is called when an action is dispatched from the global menu
                 const { action } = event.detail;
                 this.handleGlobalAction(action);
             }
 
             handleRowClick(row) {
                 const { deviceId } = row.dataset;
-                const checkbox = row.querySelector(`input[data-device-id="${deviceId}"]`);
-                if (!checkbox) return;
+                const checkboxes = row.querySelectorAll(`input[data-device-id="${deviceId}"]`);
+                if (checkboxes.length === 0) return;
 
-                const isInspected = !checkbox.checked; // The new state
+                const isInspected = !checkboxes[0].checked;
                 
                 if (isInspected) {
                     this.state.checkedDevices.add(deviceId);
@@ -737,9 +1205,7 @@
                 } else {
                     this.state.checkedDevices.delete(deviceId);
                     const historyIndex = this.state.checkHistory.indexOf(deviceId);
-                    if (historyIndex > -1) {
-                        this.state.checkHistory.splice(historyIndex, 1);
-                    }
+                    if (historyIndex > -1) this.state.checkHistory.splice(historyIndex, 1);
                 }
                 
                 row.classList.add('flash-bg');
@@ -759,7 +1225,7 @@
                 if (action === 'clear-all') {
                     showConfirmationModal(
                         "Are you sure you want to clear all inspection checkmarks? This action cannot be undone.",
-                        () => { // This is the onConfirm callback
+                        () => { 
                             this.state.checkedDevices.clear();
                             this.state.checkHistory = [];
                             showToast('All checks cleared.', 'info');
@@ -768,7 +1234,7 @@
                             this.updateUI();
                         }
                     );
-                    return; // Return early to avoid running save/update twice
+                    return;
                 }
 
                 if (action === 'undo') {
@@ -779,7 +1245,9 @@
                     const lastCheckedId = this.state.checkHistory.pop();
                     this.state.checkedDevices.delete(lastCheckedId);
                     const device = this.data.devices.find(d => this.getUniqueDeviceId(d) === lastCheckedId);
-                    showToast(`Undo: Unchecked "${device.messages}"`, 'info');
+                    if (device) {
+                        showToast(`Undo: Unchecked "${device.messages}"`, 'info');
+                    }
                 }
                 if (action === 'export') {
                     this.exportInspectedList();
@@ -809,10 +1277,20 @@
             }
             filterTable(query) {
                 const q = query.toLowerCase();
-                $$('tbody tr', this).forEach(row => {
+                $$('.device-row', this).forEach(row => {
                     const textContent = row.textContent.toLowerCase();
-                    const title = row.querySelector('[title]')?.title.toLowerCase() || '';
-                    row.style.display = textContent.includes(q) || title.includes(q) ? '' : 'none';
+                    row.style.display = textContent.includes(q) ? '' : 'none';
+                    
+                    // On desktop, we want to maintain the table display property
+                    if (window.innerWidth >= 640) {
+                        if (textContent.includes(q)) {
+                           row.style.display = 'table-row';
+                        }
+                    } else {
+                         if (textContent.includes(q)) {
+                           row.style.display = 'block';
+                        }
+                    }
                 });
             }
             updateUI() {
@@ -825,7 +1303,7 @@
                     const lastCheckedId = this.state.checkHistory[this.state.checkHistory.length - 1];
                     const device = this.data.devices.find(d => this.getUniqueDeviceId(d) === lastCheckedId);
                     if (device && footerText) {
-                        const idText = device.loop !== 'N/A' ? `L${device.loop}/A${device.address}` : `${device.deviceType} ${device.address}`;
+                        const idText = device.systemAddress ? device.systemAddress : (device.loop !== 'N/A' ? `L${device.loop}/A${device.address}` : `${device.deviceType} ${device.address}`);
                         footerText.textContent = ` ${idText}: ${device.messages}`;
                         footer.classList.remove('hidden');
                     }
@@ -857,7 +1335,6 @@
                 }
                 workspace.setAttribute('building-key', key);
 
-                // Make menu visible and enabled only when a checklist is active
                 $('#header-menu-container').classList.remove('invisible', 'opacity-50');
                 $('#menu-toggle-button').disabled = false;
             });
@@ -867,15 +1344,12 @@
             const menuButton = $('#menu-toggle-button');
             const menuDropdown = $('#menu-dropdown');
             
-            // Hide menu initially and disable until a checklist is loaded
             menuContainer.classList.add('invisible', 'opacity-50');
             menuButton.disabled = true;
 
             function toggleMenu(show) {
                 const isVisible = !menuDropdown.classList.contains('hidden');
-                if (typeof show !== 'boolean') {
-                    show = !isVisible;
-                }
+                if (typeof show !== 'boolean') show = !isVisible;
                 menuDropdown.classList.toggle('hidden', !show);
                 menuButton.setAttribute('aria-expanded', show);
             }
@@ -889,24 +1363,17 @@
                 const action = e.target.closest('[data-menu-action]')?.dataset.menuAction;
                 if (action) {
                     e.preventDefault();
-                    // Dispatch an event for the workspace to hear
                     document.dispatchEvent(new CustomEvent('request-workspace-action', { detail: { action } }));
-                    toggleMenu(false); // Close menu after action
+                    toggleMenu(false);
                 }
             });
 
-            // Close menu when clicking outside
             window.addEventListener('click', (e) => {
-                if (!menuContainer.contains(e.target)) {
-                    toggleMenu(false);
-                }
+                if (!menuContainer.contains(e.target)) toggleMenu(false);
             });
 
-            // Close menu with Escape key
             window.addEventListener('keydown', (e) => {
-                if (e.key === 'Escape' && !menuDropdown.classList.contains('hidden')) {
-                    toggleMenu(false);
-                }
+                if (e.key === 'Escape' && !menuDropdown.classList.contains('hidden')) toggleMenu(false);
             });
         });
     </script>
