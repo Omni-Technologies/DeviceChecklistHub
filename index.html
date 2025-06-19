@@ -8,6 +8,7 @@
     <!-- PWA & SEO Meta -->
     <meta name="description" content="Omni Technologies Device Checklist Hub for fire-alarm inspections.">
     <meta name="theme-color" content="#1e293b">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/1e88e5/ffffff?text=Omni">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
@@ -36,15 +37,41 @@
         font-family: 'Inter', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
+        /* Prevent footer from overlapping content, accounts for footer height */
+        padding-bottom: 56px; 
       }
       /* Custom focus rings for better accessibility */
       .focus-ring { @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500; }
+      
       /* Arrow rotation for accordion */
       [aria-expanded="true"] > .accordion-arrow { transform: rotate(180deg); }
+      
       /* Styling for sortable table headers */
       .table-header-sortable:hover { @apply bg-slate-700; }
-      .table-header-sortable svg { opacity: 0.3; }
+      .table-header-sortable svg { opacity: 0.5; transition: opacity 0.2s; }
       .table-header-sortable[aria-sort] svg { opacity: 1; }
+      
+      /* Click-to-check row style */
+      .device-row { cursor: pointer; }
+      
+      /* Visual feedback on check/uncheck */
+      @keyframes flash-sky {
+        0% { background-color: transparent; }
+        50% { background-color: rgba(14, 165, 233, 0.1); }
+        100% { background-color: transparent; }
+      }
+      .flash-bg {
+        animation: flash-sky 0.5s ease-out;
+      }
+      
+      /* Sticky footer styles */
+      .sticky-footer {
+            backdrop-filter: blur(10px);
+            background-color: rgba(241, 245, 249, 0.85); /* light mode bg */
+      }
+      .dark .sticky-footer {
+          background-color: rgba(30, 41, 59, 0.85); /* dark mode bg */
+      }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-850 text-slate-800 dark:text-slate-200">
@@ -55,9 +82,34 @@
         <header class="bg-white/75 dark:bg-slate-900/75 backdrop-blur-sm sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800">
             <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
+                    <!-- Left Side: Title -->
                     <div class="flex items-center">
                         <span class="text-2xl font-bold text-sky-600 dark:text-sky-500">✅</span>
                         <h1 class="ml-3 text-xl font-bold tracking-tight">Omni Checklist Hub</h1>
+                    </div>
+                    
+                    <!-- Right Side: Hamburger Menu -->
+                    <div id="header-menu-container" class="relative">
+                        <button id="menu-toggle-button" type="button" class="p-2 rounded-md hover:bg-slate-200 dark:hover:bg-slate-700 focus-ring" aria-label="Open options menu" aria-haspopup="true" aria-expanded="false">
+                            <svg class="h-6 w-6" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+                            </svg>
+                        </button>
+                        
+                        <div id="menu-dropdown" class="hidden absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-toggle-button" tabindex="-1">
+                            <div class="py-1" role="none">
+                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-undo" data-menu-action="undo">
+                                    Undo Last Check
+                                </a>
+                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-export" data-menu-action="export">
+                                    Export Inspected List
+                                </a>
+                                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                                <a href="#" class="text-red-600 dark:text-red-400 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-clear" data-menu-action="clear-all">
+                                    Clear All Checkmarks...
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
                  <!-- Mobile Building Picker (becomes visible via JS) -->
@@ -70,7 +122,6 @@
             <div class="flex flex-col sm:flex-row gap-8">
                 <!-- Checklist Workspace -->
                 <div id="checklist-workspace" class="flex-grow">
-                    <!-- This will be populated with the checklist-workspace component -->
                      <div id="welcome-message" class="text-center py-20">
                         <h2 class="text-2xl font-semibold text-slate-600 dark:text-slate-400">Welcome, Inspector!</h2>
                         <p class="mt-2 text-slate-500">Please select a checklist from the list to begin.</p>
@@ -79,30 +130,204 @@
 
                 <!-- Desktop Building Picker Sidebar -->
                 <aside id="desktop-building-picker-container" class="hidden sm:block sm:w-64 md:w-72 lg:w-80 flex-shrink-0">
-                    <!-- This will be populated with the building-picker component -->
                 </aside>
             </div>
         </main>
+        
+        <!-- Last Checked Footer -->
+        <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-700 sticky-footer z-30 hidden">
+            <div class="max-w-screen-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
+                <p class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate">
+                    Last Checked: <span id="last-checked-text" class="font-bold text-sky-600 dark:text-sky-500"></span>
+                </p>
+            </div>
+        </footer>
 
         <!-- Toasts/Notifications Container -->
-        <div id="toast-container" aria-live="assertive" aria-atomic="true" class="fixed bottom-0 right-0 p-4 sm:p-6 space-y-3 z-50 w-full max-w-sm">
-            <!-- Toasts will be injected here -->
+        <div id="toast-container" aria-live="assertive" aria-atomic="true" class="fixed bottom-16 right-0 p-4 sm:p-6 space-y-3 z-50 w-full max-w-sm">
         </div>
+        
+        <!-- Confirmation Modal -->
+        <div id="confirmation-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+            <div id="confirmation-modal-panel" class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
+                <div class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
+                    <div class="sm:flex sm:items-start">
+                        <div class="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 dark:bg-red-900/50 sm:mx-0 sm:h-10 sm:w-10">
+                            <svg class="h-6 w-6 text-red-600 dark:text-red-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"></path></svg>
+                        </div>
+                        <div class="mt-3 text-center sm:mt-0 sm:ml-4 sm:text-left">
+                            <h3 class="text-lg font-semibold leading-6 text-slate-900 dark:text-slate-100" id="modal-title">Confirmation</h3>
+                            <div class="mt-2">
+                                <p class="text-sm text-slate-500 dark:text-slate-400" id="modal-message">Are you sure? This action cannot be undone.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
+                    <button type="button" id="modal-confirm-button" class="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 sm:ml-3 sm:w-auto sm:text-sm">Confirm</button>
+                    <button type="button" id="modal-cancel-button" class="mt-3 inline-flex w-full justify-center rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-base font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-600 focus-ring sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
+                </div>
+            </div>
+        </div>
+
 
     </div>
     
-    <!-- Checklist Data Source -->
-    <script src="checklists.js"></script>
-
     <!-- Main Application Logic -->
     <script type="module">
+        // ===================================================================================
+        // --- CHECKLIST DATA ---
+        // To add a new checklist for another location, simply copy the object structure below
+        // and add it to this array. Make sure the 'key' is unique.
+        // ===================================================================================
+        const CHECKLISTS = [
+          {
+            key: "mcfarland_psc", // Unique key for localStorage
+            name: "McFarland Public Safety Center",
+            location: "Fire Alarm Device Inspection",
+            devices: [
+              // All McFarland devices...
+              { loop: 1, address: 1, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939747909', messages: 'BASEMENT SMOKE ABOVE FACP' },
+              { loop: 1, address: 2, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3831067556', messages: 'BASEMENT HEAT BY SPRINK PIPING' },
+              { loop: 1, address: 3, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828858723', messages: 'BASEMENT HEAT MECHANICAL RM' },
+              { loop: 1, address: 4, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754204', messages: 'BASEMENT SMOKE ELEVATOR SMOKE' },
+              { loop: 1, address: 5, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828858570', messages: 'BASEMENT HEAT OUTSIDE PANEL RM' },
+              { loop: 1, address: 6, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828849349', messages: 'BASEMENT HEAT ABOVE PANEL' },
+              { loop: 1, address: 7, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828845501', messages: 'BASEMENT HEAT MIDDLE/STAIRWELL B' },
+              { loop: 1, address: 8, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828862416', messages: 'BASEMENT HEAT FAR MIDDLE/STAIR A' },
+              { loop: 1, address: 9, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828845457', messages: 'BASEMENT HEAT NORTH/STAIRWELL A' },
+              { loop: 1, address: 10, model: 'SD', deviceType: 'Duct Supervisory Latching', serialNumber: '3969261901', messages: 'APPATURE BAY MEZ DUCT DETECTOR' },
+              { loop: 1, address: 11, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939777975', messages: 'PENTHOUSE SMOKE ABOVE BOSCH DIALER' },
+              { loop: 1, address: 12, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754365', messages: 'SOUTH STAIRWELL SMOKE DETECTOR' },
+              { loop: 1, address: 13, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939647735', messages: 'OUTSIDE SOUTH STAIR NEXT TO EXTERIOR DR' },
+              { loop: 1, address: 14, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939753535', messages: '1ST FLOOR SMOKE CORRIDOR TO STAIR B' },
+              { loop: 1, address: 15, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939753511', messages: '1ST FLOOR SMOKE S/E APP BAY' },
+              { loop: 1, address: 16, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754167', messages: '1ST FLOOR SMOKE ELEVATOR SMOKE' },
+              { loop: 1, address: 17, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939755119', messages: '1ST FLOOR SMOKE OUTSIDE ELEVATOR' },
+              { loop: 1, address: 18, model: 'SD', deviceType: 'Duct Supervisory Latching', serialNumber: '3912816448', messages: '1ST FLOOR DUCT STAIRWELL B' },
+              { loop: 1, address: 19, model: 'SD', deviceType: 'Duct Supervisory Latching', serialNumber: '3912816295', messages: '1ST FLOOR DUCT STAIRWELL B' },
+              { loop: 1, address: 20, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754259', messages: '1ST FLOOR SMOKE EAST APP BAY' },
+              { loop: 1, address: 21, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754297', messages: '1ST FLOOR SMOKE TRAINING STORAGE' },
+              { loop: 1, address: 22, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939755096', messages: '1ST FLOOR SMOKE MEDICAL STORAGE' },
+              { loop: 1, address: 23, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939755225', messages: '1ST FLOOR SMOKE IT/COMM ROOM' },
+              { loop: 1, address: 24, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754020', messages: '1ST FLOOR SMOKE JANITOR STORAGE' },
+              { loop: 1, address: 25, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939747961', messages: '1ST FLOOR SMOKE AV STORAGE ROOM' },
+              { loop: 1, address: 26, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754792', messages: '1ST FLOOR SMOKE COURT STORAGE' },
+              { loop: 1, address: 27, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939753962', messages: '1ST FLOOR POLICE SM EVIDENCE PROC. STOR.' },
+              { loop: 1, address: 28, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939753849', messages: '1ST FLOOR SMOKE POLICE IT CLOSET' },
+              { loop: 1, address: 29, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939753832', messages: '1ST FLOOR SMOKE POLICE SHOWER STRG' },
+              { loop: 1, address: 30, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939759575', messages: '1ST FLOOR SMOKE POLICE INVEST RM' },
+              { loop: 1, address: 31, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939758134', messages: '1ST FLOOR SMOKE POLICE P120 STORAGE' },
+              { loop: 1, address: 32, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754921', messages: '1ST FLOOR SMOKE POLICE MECH RM' },
+              { loop: 1, address: 33, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828859904', messages: '2ND FLOOR HEAT WEST MECH ROOM' },
+              { loop: 1, address: 34, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828858587', messages: '2ND FLOOR HEAT WEST MECH ROOM' },
+              { loop: 1, address: 35, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939735654', messages: '2ND FLOOR SMOKE STIARWELL B' },
+              { loop: 1, address: 36, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754563', messages: 'TOP OF ELEVATOR SHAFT SMOKE' },
+              { loop: 1, address: 37, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754266', messages: '2ND FLOOR SMOKE OUTSIDE ELEVATOR' },
+              { loop: 1, address: 38, model: 'HFS', deviceType: 'Heat', serialNumber: '3622616017', messages: 'TOP OF ELEVATOR SHAFT HEAT' },
+              { loop: 1, address: 39, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939753870', messages: '2ND FLOOR SMOKE OUTSIDE DORM 12' },
+              { loop: 1, address: 40, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939776800', messages: '2ND FLOOR SMOKE DORM 12' },
+              { loop: 1, address: 41, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754525', messages: '2ND FLOOR SMOKE OUTSIDE DORM 11' },
+              { loop: 1, address: 42, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939736088', messages: '2ND FLOOR SMOKE DORM 11' },
+              { loop: 1, address: 43, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939754242', messages: '2ND FLOOR SMOKE DORM 10' },
+              { loop: 1, address: 44, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939778194', messages: '2ND FLOOR SMOKE DORM 9' },
+              { loop: 1, address: 45, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754945', messages: '2ND FLOOR SMOKE OUTSIDE DORM 8/9' },
+              { loop: 1, address: 46, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939754938', messages: '2ND FLOOR SMOKE DORM 8' },
+              { loop: 1, address: 47, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939754822', messages: '2ND FLOOR SMOKE DORM7' },
+              { loop: 1, address: 48, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939754044', messages: '2ND FLOOR SMOKE DORM 6' },
+              { loop: 1, address: 49, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939755102', messages: '2ND FLOOR SMOKE OUTSIDE DORM 5/6' },
+              { loop: 1, address: 50, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939747923', messages: '2ND FLOOR SMOKE DORM 5' },
+              { loop: 1, address: 51, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939753894', messages: '2ND FLOOR SMOKE DORM 4' },
+              { loop: 1, address: 52, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939755010', messages: '2ND FLOOR SMOKE OUTSIDE DORM 3/4' },
+              { loop: 1, address: 53, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939753856', messages: '2ND FLOOR SMOKE DORM 3' },
+              { loop: 1, address: 54, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939755065', messages: '2ND FLOOR SMOKE DORM 2' },
+              { loop: 1, address: 55, model: 'PS', deviceType: 'Supervisory Non-Latching', serialNumber: '3939754433', messages: '2ND FLOOR SMOKE DORM 1' },
+              { loop: 1, address: 56, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939754952', messages: '2ND FLOOR SMOKE OUTSIDE DORM 1' },
+              { loop: 1, address: 57, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939747619', messages: '2ND FLOOR SMOKE NORTH STAIRWELL' },
+              { loop: 1, address: 58, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3945817825', messages: '1ST FLOOR SMOKE ROLL DOWN DOOR' },
+              { loop: 1, address: 60, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3934208757', messages: '1ST FLOOR SMOKE ROLL DOWN DOOR' },
+              { loop: 1, address: 65, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939758455', messages: 'SOUTH STAIRWELL ROOF ACCESS' },
+              { loop: 1, address: 80, model: 'IM', deviceType: 'Monitor', serialNumber: '3698974301', messages: 'ISOLATOR MODULE BASEMENT FACP' },
+              { loop: 1, address: 81, model: 'IM', deviceType: 'Monitor', serialNumber: '3698972574', messages: 'ISOLATOR MODULE 1ST FLOOR FACP' },
+              { loop: 1, address: 82, model: 'IM', deviceType: 'Monitor', serialNumber: '3698973106', messages: 'ISOLATOR MODULE 2ND FLOOR FACP' },
+              { loop: 1, address: 83, model: 'IM', deviceType: 'Monitor', serialNumber: '3698973830', messages: 'ISOLATOR MODULE 2ND FLR DORMS FACP' },
+              { loop: 1, address: 126, model: '278', deviceType: 'Pull Station', serialNumber: '4899926137', messages: 'BASEMENT PULL STAIR B' },
+              { loop: 1, address: 127, model: '278', deviceType: 'Pull Station', serialNumber: '4899926700', messages: '2ND FLOOR PULL APP. BAY STORAGE' },
+              { loop: 1, address: 128, model: '278', deviceType: 'Pull Station', serialNumber: '4899925901', messages: 'BASEMENT PULL STAIRWELL A' },
+              { loop: 1, address: 129, model: 'CT2', deviceType: 'Supervisory Non-Latching', serialNumber: '4922818507', messages: 'ZONE #1 CONTROL VALVE ACTIVE' },
+              { loop: 1, address: 130, model: 'CT2', deviceType: 'Supervisory Non-Latching', serialNumber: '4922818514', messages: 'ZONE #2 CONTROL VALVE ACTIVE' },
+              { loop: 1, address: 131, model: 'CT2', deviceType: 'Water Flow NoDelay', serialNumber: '4922828643', messages: 'ZONE #1 WATEFLOW ACTIVE' },
+              { loop: 1, address: 132, model: 'CT2', deviceType: 'Water Flow NoDelay', serialNumber: '4922828650', messages: 'ZONE #2 WATERFLOW ACTIVE' },
+              { loop: 1, address: 133, model: 'CT1', deviceType: 'Supervisory Non-Latching', serialNumber: '4800233804', messages: 'BASEMENT ELEV EQUIP POWER MONITOR' },
+              { loop: 1, address: 134, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222515448', messages: 'BASEMENT ELEV EQUIP SHUNT TRIP' },
+              { loop: 1, address: 135, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222516698', messages: 'ELEVATOR MAIN RECALL' },
+              { loop: 1, address: 136, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222516971', messages: 'ELEVATOR SECONDARY RECALL' },
+              { loop: 1, address: 137, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222516896', messages: 'ELEVATOR HAT' },
+              { loop: 1, address: 138, model: '278', deviceType: 'Pull Station', serialNumber: '4899919580', messages: '1ST FLOOR PULL S/W APP BAY EXIT' },
+              { loop: 1, address: 139, model: '278', deviceType: 'Pull Station', serialNumber: '4899926144', messages: '1ST FLOOR PULL TURN-OUT GEAR EXIT' },
+              { loop: 1, address: 140, model: '278', deviceType: 'Pull Station', serialNumber: '4899919313', messages: '1ST FLOOR PULL ANTIQUE BAY EXIT' },
+              { loop: 1, address: 141, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222516957', messages: '1ST FLOOR DUCT CR AHU SHUTDOWN STAIR B' },
+              { loop: 1, address: 142, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222516841', messages: '1ST FLOOR DUCT CR AHU SHUTDOWN STAIR B' },
+              { loop: 1, address: 143, model: 'CT2', deviceType: 'Supervisory Non-Latching', serialNumber: '4925797465', messages: 'DIALER TROUBLE PENTHOUSE BOSCH' },
+              { loop: 1, address: 144, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5221949961', messages: 'AHU #3 SHUTDOWN' },
+              { loop: 1, address: 145, model: '278', deviceType: 'Pull Station', serialNumber: '4899927172', messages: '1ST FLOOR PULL STAIRWELL B' },
+              { loop: 1, address: 146, model: '278', deviceType: 'Pull Station', serialNumber: '4899919245', messages: '1ST FLOOR PULL STAIRWELL A' },
+              { loop: 1, address: 147, model: '278', deviceType: 'Pull Station', serialNumber: '4899928186', messages: '1ST FLOOR PULL SOUTH VESTIBULE' },
+              { loop: 1, address: 148, model: '278', deviceType: 'Pull Station', serialNumber: '4899928094', messages: '1ST FLOOR PULL COURT/TRAINING RM' },
+              { loop: 1, address: 149, model: '278', deviceType: 'Pull Station', serialNumber: '4899927097', messages: '1ST FLOOR PULL OUTSIDE INTERVIEW RM' },
+              { loop: 1, address: 150, model: '278', deviceType: 'Pull Station', serialNumber: '4899926434', messages: '1ST FLOOR PULL MAIN VESTIBULE' },
+              { loop: 1, address: 151, model: '278', deviceType: 'Pull Station', serialNumber: '4899926304', messages: '1ST FLOOR PULL POLICE VESTIBULE' },
+              { loop: 1, address: 152, model: '278', deviceType: 'Pull Station', serialNumber: '4899930905', messages: '1ST FLOOR PULL POLICE GARAGE 3/3' },
+              { loop: 1, address: 153, model: '278', deviceType: 'Pull Station', serialNumber: '4899919788', messages: '1ST FLOOR PULL POLICE GARAGE 2/3' },
+              { loop: 1, address: 154, model: '278', deviceType: 'Pull Station', serialNumber: '4899919849', messages: 'PENTHOUSE TO ROOF ACCESS' },
+              { loop: 1, address: 155, model: '278', deviceType: 'Pull Station', serialNumber: '4899926717', messages: '2ND FLOOR PULL STAIRWELL B' },
+              { loop: 1, address: 156, model: 'CT1', deviceType: 'Supervisory Non-Latching', serialNumber: '4800233392', messages: '2ND FLOOR RANGE HOOD NEED TO TEST' },
+              { loop: 1, address: 157, model: '278', deviceType: 'Pull Station', serialNumber: '4899927875', messages: '2ND FLOOR PULL KITCHEN TO APP BAY' },
+              { loop: 1, address: 158, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5221705154', messages: 'BASEMENT CR DOOR HOLDER' },
+              { loop: 1, address: 159, model: '278', deviceType: 'Pull Station', serialNumber: '4899931070', messages: '2ND FLOOR PULL STAIRWELL A' },
+              { loop: 1, address: 160, model: 'CT2', deviceType: 'Supervisory Non-Latching', serialNumber: '4921144881', messages: 'BACK FLOW SECONDARY CONTROL VALVE ACTIVE' },
+              { loop: 1, address: 161, model: 'CT2', deviceType: 'Supervisory Non-Latching', serialNumber: '4921144898', messages: 'BACKFLOW PRIMARY CONTROL VALVE ACTIVE' },
+              { loop: 1, address: 162, model: 'CT2', deviceType: 'Supervisory Non-Latching', serialNumber: '4925797472', messages: 'DIALER/NOT USED CT2 TO BOSCH CELL' },
+              { loop: 1, address: 163, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5225324788', messages: 'TROUBLE TO BOSCH PENTHOUSE FIRE' },
+              { loop: 1, address: 164, model: '278', deviceType: 'Pull Station', serialNumber: '4899918859', messages: '1ST FLOOR PULL POLICE GARAGE 1/3' },
+              { loop: 1, address: 165, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5223936815', messages: 'PENTHOUSE FIRE ALARM TO BOSCH DIALER' },
+              { loop: 1, address: 166, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222572595', messages: 'PENTHOUSE CO ALARM TO BOSCH DIALER' },
+              { loop: 1, address: 167, model: 'CT2', deviceType: 'Supervisory Latching', serialNumber: '4922828803', messages: '2ND FLOOR CO' },
+              { loop: 1, address: 168, model: 'CT2', deviceType: 'Supervisory Latching', serialNumber: '4922828810', messages: 'INPUT 2 FOR CO\'S NOT USED' },
+              { loop: 1, address: 180, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5221061762', messages: 'PENTHOUSE FIRE SUP TO BOSCH DIALER' },
+              { loop: 1, address: 181, model: 'CRR', deviceType: 'Relay Non-Silenceable', serialNumber: '5221663690', messages: 'SOUNDER BASE RELAY' },
+              { loop: 1, address: 182, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5216256135', messages: 'DOOR ACCESS RELAY' },
+              { loop: 1, address: 183, model: '278', deviceType: 'Pull Station', serialNumber: '4899919535', messages: 'BASEMENT PULL NEXT TO FACP' },
+              { loop: 1, address: 185, model: 'CC1S', deviceType: 'Genesis Audible Visible Silence', serialNumber: '5074492140', messages: '1ST FLOOR CC1S POLICE IT CLOSET' },
+              { loop: 1, address: 186, model: 'CR', deviceType: 'Relay Non-Silenceable', serialNumber: '5222516872', messages: 'FIRE ROLL UP DOOR' },
+              { loop: 1, address: 187, model: 'RM1', deviceType: 'Monitor', serialNumber: '5798621253', messages: 'SOUNDER BASE PWR MONITOR' },
+              { loop: 1, address: 188, model: 'CC1S', deviceType: 'Genesis Audible Visible Silence', serialNumber: '5066206359', messages: 'BPS RM F003 NEXT TO FACP' },
+              { loop: 1, address: 189, model: 'CC1S', deviceType: 'Genesis Audible Visible Silence', serialNumber: '5066291058', messages: 'FURTHEST FROM PANEL BPS RM F003' },
+              { loop: 'N/A', address: 1, model: 'LCD C', deviceType: 'Annunciator', serialNumber: 'N/A', messages: 'MCFARLAND PUBLIC BLD FIRE PANEL NORMAL' },
+              { loop: 'N/A', address: 2, model: 'LCD C', deviceType: 'Annunciator', serialNumber: 'N/A', messages: 'MCFARLAND PUBLIC BLD FIRE PANEL NORMAL' },
+              { loop: 'N/A', address: 1, model: 'Genesis', deviceType: 'NAC', serialNumber: 'N/A', messages: 'Bell Active' },
+              { loop: 'N/A', address: 2, model: 'Genesis', deviceType: 'NAC', serialNumber: 'N/A', messages: 'NAC 2' },
+              { loop: 'N/A', address: 3, model: 'Genesis', deviceType: 'NAC', serialNumber: 'N/A', messages: 'NAC 3' },
+              { loop: 'N/A', address: 4, model: 'Genesis', deviceType: 'NAC', serialNumber: 'N/A', messages: 'NAC 4' },
+            ]
+          },
+          {
+            key: "city_hall_annex", // Example of a second checklist
+            name: "City Hall Annex",
+            location: "Quarterly Device Test",
+            devices: [
+              { loop: 1, address: 1, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '5550001234', messages: 'LOBBY SMOKE DETECTOR' },
+              { loop: 1, address: 2, model: '278', deviceType: 'Pull Station', serialNumber: '5550005678', messages: 'LOBBY PULL BY EAST EXIT' },
+              { loop: 1, address: 3, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '5550009012', messages: 'BREAK ROOM HEAT DETECTOR' },
+              { loop: 'N/A', address: 1, model: 'Genesis', deviceType: 'NAC', serialNumber: 'N/A', messages: 'HORN/STROBE CIRCUIT 1' },
+            ]
+          }
+        ];
+
         // --- UTILITIES ---
         const $ = (selector, parent = document) => parent.querySelector(selector);
         const $$ = (selector, parent = document) => parent.querySelectorAll(selector);
 
-        /**
-         * Simple debounce function to limit how often a function can run.
-         */
         function debounce(func, delay = 250) {
             let timeoutId;
             return (...args) => {
@@ -113,89 +338,111 @@
             };
         }
 
-        /**
-         * Sanitizes string to prevent XSS attacks by converting HTML to text.
-         */
         function escapeHTML(str) {
+            if (typeof str !== 'string') return '';
             const p = document.createElement('p');
             p.textContent = str;
             return p.innerHTML;
         }
 
-        /**
-         * Shows a toast notification at the bottom-right of the screen.
-         * @param {string} message - The message to display.
-         * @param {string} type - 'info', 'success', or 'error'.
-         */
         function showToast(message, type = 'info') {
             const container = $('#toast-container');
             if (!container) return;
-
             const toastId = `toast-${Date.now()}`;
             const colors = {
                 success: 'bg-green-500 dark:bg-green-600',
                 error: 'bg-red-500 dark:bg-red-600',
                 info: 'bg-sky-500 dark:bg-sky-600',
             };
-
             const toast = document.createElement('div');
             toast.id = toastId;
             toast.className = `transform transition-all duration-300 ease-out translate-y-4 opacity-0 p-4 rounded-lg shadow-lg text-white ${colors[type] || colors.info}`;
             toast.setAttribute('role', 'alert');
             toast.innerHTML = `<p class="font-semibold">${escapeHTML(message)}</p>`;
-            
             container.appendChild(toast);
-            
-            // Animate in
             requestAnimationFrame(() => {
                 toast.classList.remove('translate-y-4', 'opacity-0');
             });
-
-            // Auto-dismiss after 5 seconds
             setTimeout(() => {
                 toast.classList.add('opacity-0', 'translate-x-full');
                 toast.addEventListener('transitionend', () => toast.remove());
             }, 5000);
         }
+
+        // --- MODAL LOGIC ---
+        const modal = $('#confirmation-modal');
+        const modalPanel = $('#confirmation-modal-panel');
+        const confirmButton = $('#modal-confirm-button');
+        const cancelButton = $('#modal-cancel-button');
+        const modalMessage = $('#modal-message');
+        let confirmCallback = null;
         
+        function showConfirmationModal(message, onConfirm) {
+            if (!modal) return;
+            
+            modalMessage.textContent = message;
+            confirmCallback = onConfirm;
+            
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+            
+            requestAnimationFrame(() => {
+                modalPanel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+            });
+        }
+        
+        function hideConfirmationModal() {
+             if (!modal) return;
+             
+             modalPanel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
+             modal.addEventListener('transitionend', () => {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+             }, { once: true });
+
+             confirmCallback = null;
+        }
+
+        confirmButton.addEventListener('click', () => {
+            if (typeof confirmCallback === 'function') {
+                confirmCallback();
+            }
+            hideConfirmationModal();
+        });
+
+        cancelButton.addEventListener('click', hideConfirmationModal);
+        modal.addEventListener('click', (e) => {
+            if (e.target === modal) {
+                hideConfirmationModal();
+            }
+        });
+
         // --- WEB COMPONENTS ---
         
-        /**
-         * BuildingPicker Component: Shows list of checklists as a select menu (mobile) or sidebar (desktop).
-         * Data is sourced from the global `CHECKLISTS` variable from checklists.js.
-         */
         class BuildingPicker extends HTMLElement {
             constructor() {
                 super();
                 this.isMobile = window.innerWidth < 640;
-                // Check if the global CHECKLISTS variable exists
-                this.checklists = typeof CHECKLISTS !== 'undefined' ? CHECKLISTS : [];
+                this.checklists = CHECKLISTS || [];
             }
-
             connectedCallback() {
                 this.render();
                 this.attachEventListeners();
                 window.addEventListener('resize', debounce(() => this.handleResize(), 200));
             }
-
             render() {
                 const containerId = this.isMobile ? '#mobile-building-picker-container' : '#desktop-building-picker-container';
                 const otherContainerId = this.isMobile ? '#desktop-building-picker-container' : '#mobile-building-picker-container';
                 const container = $(containerId);
                 const otherContainer = $(otherContainerId);
-
-                if(!container) return;
-
-                // Populate the correct container based on screen size
+                if (!container) return;
                 container.innerHTML = this.isMobile ? this.getMobileHTML() : this.getDesktopHTML();
-                otherContainer.innerHTML = ''; // Clear the other container
+                if (otherContainer) otherContainer.innerHTML = '';
+                this.attachEventListeners();
             }
-
             getMobileHTML() {
-                 if (this.checklists.length === 0) {
-                    return `<p class="text-center text-sm text-slate-500">No checklists available.</p>`;
-                 }
-                 return `
+                if (this.checklists.length === 0) return `<p class="text-center text-sm text-slate-500">No checklists available.</p>`;
+                return `
                     <label for="building-select" class="sr-only">Select Checklist</label>
                     <select id="building-select" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
                         <option value="">-- Select a Checklist --</option>
@@ -203,14 +450,13 @@
                     </select>
                 `;
             }
-
             getDesktopHTML() {
                 return `
                     <div class="sticky top-20">
                         <div class="bg-white dark:bg-slate-900 rounded-xl shadow-md p-4">
                             <h2 class="text-lg font-semibold mb-3">Checklists</h2>
                              <input type="search" id="building-search" placeholder="Search checklists..." class="mb-3 block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
-                            <ul id="building-list" class="space-y-1 max-h-[60vh] overflow-y-auto">
+                            <ul id="building-list" class="space-y-1 max-h-[calc(100vh-12rem)] overflow-y-auto">
                                 ${this.checklists.length === 0 ? `<li class="text-sm text-slate-500">No checklists available.</li>` : ''}
                                 ${this.checklists.map(c => `
                                     <li>
@@ -224,67 +470,71 @@
                     </div>
                 `;
             }
-            
             attachEventListeners() {
-                if (this.isMobile) {
-                    $('#building-select', document)?.addEventListener('change', (e) => {
-                        if(e.target.value) this.selectChecklist(e.target.value);
-                    });
-                } else {
-                    $('#building-list', this)?.addEventListener('click', (e) => {
+                const mobileSelect = $('#building-select');
+                if (mobileSelect) mobileSelect.addEventListener('change', (e) => { if (e.target.value) this.selectChecklist(e.target.value); });
+                const desktopList = $('#building-list');
+                if (desktopList) {
+                    desktopList.addEventListener('click', (e) => {
                         e.preventDefault();
                         const link = e.target.closest('a');
                         if (link && link.dataset.key) {
-                            // Visually mark the selected item
-                            $$('a', this).forEach(a => a.classList.remove('bg-sky-100', 'dark:bg-sky-900/50'));
+                            $$('a', desktopList).forEach(a => a.classList.remove('bg-sky-100', 'dark:bg-sky-900/50'));
                             link.classList.add('bg-sky-100', 'dark:bg-sky-900/50');
                             this.selectChecklist(link.dataset.key);
                         }
                     });
-                    $('#building-search', this)?.addEventListener('input', debounce((e) => this.filterChecklists(e.target.value), 200));
                 }
+                const searchInput = $('#building-search');
+                if (searchInput) searchInput.addEventListener('input', debounce((e) => this.filterChecklists(e.target.value), 200));
             }
-
-            /** Filters the desktop checklist list based on user input. */
             filterChecklists(query) {
                 const q = query.toLowerCase();
-                $$('#building-list li a').forEach(link => {
-                    const name = link.textContent.toLowerCase();
-                    link.parentElement.style.display = name.includes(q) ? '' : 'none';
+                $$('#building-list li').forEach(li => {
+                    const link = li.querySelector('a');
+                    if (link) {
+                        const name = link.textContent.toLowerCase();
+                        li.style.display = name.includes(q) ? '' : 'none';
+                    }
                 });
             }
-
-            /** Dispatches an event to the main app when a checklist is selected. */
             selectChecklist(key) {
                 document.dispatchEvent(new CustomEvent('checklist-selected', { detail: { key } }));
             }
-            
-            /** Re-renders the component if the viewport crosses the mobile breakpoint. */
             handleResize() {
                 const newIsMobile = window.innerWidth < 640;
                 if (newIsMobile !== this.isMobile) {
                     this.isMobile = newIsMobile;
                     this.render();
-                    this.attachEventListeners();
                 }
             }
         }
         customElements.define('building-picker', BuildingPicker);
         
-        /**
-         * ChecklistWorkspace Component: Renders tabs, tables, and manages inspection state for a selected checklist.
-         */
         class ChecklistWorkspace extends HTMLElement {
             constructor() {
                 super();
                 this.data = null;
-                this.inspected = new Set();
                 this.checklistKey = null;
-                this.sortState = {};
+                this.sortState = { key: 'address', dir: 'asc' }; // Default sort
+                this.state = {
+                    checkedDevices: new Set(),
+                    checkHistory: [],
+                };
+                // Bind the event handler once
+                this.handleMenuAction = this.handleMenuAction.bind(this);
+            }
+            static get observedAttributes() { return ['building-key']; }
+
+            connectedCallback() {
+                // Listen for actions dispatched from the header menu
+                document.addEventListener('request-workspace-action', this.handleMenuAction);
             }
 
-            // Observe the 'building-key' attribute for changes.
-            static get observedAttributes() { return ['building-key']; }
+            disconnectedCallback() {
+                // Clean up listener when element is removed
+                document.removeEventListener('request-workspace-action', this.handleMenuAction);
+            }
 
             attributeChangedCallback(name, oldValue, newValue) {
                 if (name === 'building-key' && oldValue !== newValue) {
@@ -292,16 +542,15 @@
                     this.loadChecklist();
                 }
             }
-            
-            /** Loads the checklist data from the global CHECKLISTS variable. */
+            getUniqueDeviceId(device) {
+                // Create a unique ID for a device based on its properties
+                return `${this.checklistKey}-${device.loop}-${device.address}-${device.serialNumber}`;
+            }
             loadChecklist() {
                 this.innerHTML = `<div class="text-center py-20">Loading checklist...</div>`;
                 try {
-                    // Find the selected checklist by its unique key.
                     this.data = CHECKLISTS.find(c => c.key === this.checklistKey);
-                    if (!this.data) {
-                        throw new Error("Checklist not found.");
-                    }
+                    if (!this.data) throw new Error("Checklist not found.");
                     this.loadInspectedState();
                     this.render();
                 } catch (error) {
@@ -310,194 +559,114 @@
                     console.error("Failed to load checklist:", error);
                 }
             }
-            
-            /** Loads the saved progress for the current checklist from localStorage. */
             loadInspectedState() {
-                this.inspected.clear();
-                this.data.devices.forEach(device => {
-                    // Unique key for each device in localStorage: checklistKey-deviceAddress
-                    const key = `${this.checklistKey}-${device.address}`;
-                    if(localStorage.getItem(key) === 'true') {
-                        this.inspected.add(device.address);
-                    }
-                });
-            }
-
-            /** Saves the inspection state of a single device to localStorage. */
-            saveInspectedState(address, isInspected) {
-                const key = `${this.checklistKey}-${address}`;
-                if (isInspected) {
-                    localStorage.setItem(key, 'true');
-                    this.inspected.add(address);
+                const savedState = localStorage.getItem(`checklistState_${this.checklistKey}`);
+                if (savedState) {
+                    const parsed = JSON.parse(savedState);
+                    this.state.checkedDevices = new Set(parsed.checked || []);
+                    this.state.checkHistory = parsed.history || [];
                 } else {
-                    localStorage.removeItem(key);
-                    this.inspected.delete(address);
+                    this.state.checkedDevices.clear();
+                    this.state.checkHistory = [];
                 }
+                this.updateLastCheckedFooter();
             }
-            
-            /** Determines the category of a device based on its type string. */
-            getDeviceCategory(deviceType) {
-                const type = deviceType.toLowerCase();
-                if (type.includes('smoke') || type.includes('heat') || type.includes('detector')) return 'Detectors';
-                if (type.includes('module') || type.includes('pull')) return 'Modules & Pulls';
-                if (type.includes('annunciator')) return 'Annunciators';
-                if (type.includes('nac')) return 'NACs';
-                return 'Modules & Pulls'; // Default category
+            saveInspectedState() {
+                const appState = {
+                    checked: Array.from(this.state.checkedDevices),
+                    history: this.state.checkHistory
+                };
+                localStorage.setItem(`checklistState_${this.checklistKey}`, JSON.stringify(appState));
             }
-
-            /** Main render method for the entire workspace. */
             render() {
                 if (!this.data) return;
-                
-                // Group devices by category
-                const categories = {
-                    'Detectors': { icon: '📟', devices: [] },
-                    'Modules & Pulls': { icon: '🧩', devices: [] },
-                    'Annunciators': { icon: '📢', devices: [] },
-                    'NACs': { icon: '🔔', devices: [] }
-                };
-                
-                this.data.devices.forEach(device => {
-                    const category = this.getDeviceCategory(device.deviceType);
-                    categories[category].devices.push(device);
-                });
-
+                // Simplified render method, removed buttons and advanced actions
                 this.innerHTML = `
                     <div class="bg-white dark:bg-slate-900 rounded-xl shadow-lg p-4 sm:p-6">
                         <header class="mb-6">
                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">${escapeHTML(this.data.name)}</h2>
                            <p class="text-slate-500 dark:text-slate-400">${escapeHTML(this.data.location)}</p>
-                           <div class="mt-4 flex flex-wrap gap-2">
-                                <button data-action="mark-all" class="text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-semibold py-1.5 px-3 rounded-md focus-ring">Mark All Inspected</button>
-                                <button data-action="clear-all" class="text-sm bg-slate-200 hover:bg-slate-300 dark:bg-slate-700 dark:hover:bg-slate-600 font-semibold py-1.5 px-3 rounded-md focus-ring">Clear All</button>
-                                <button data-action="export" class="text-sm bg-green-200 hover:bg-green-300 dark:bg-green-800 dark:hover:bg-green-700 font-semibold py-1.5 px-3 rounded-md focus-ring">Export ✔️ List</button>
-                           </div>
                         </header>
-                        <div id="tab-container" class="border-b border-slate-200 dark:border-slate-700">
-                           <div role="tablist" aria-label="Device Categories" class="flex flex-wrap -mb-px">
-                              ${Object.keys(categories).map((cat, i) => {
-                                const categoryId = cat.replace(/\s/g, '').replace('&', 'And');
-                                return `
-                                  <button role="tab" id="tab-${categoryId}" data-category="${escapeHTML(cat)}" aria-controls="panel-${categoryId}" aria-selected="${i===0}" class="tab-btn inline-flex items-center gap-2 p-3 sm:p-4 border-b-2 font-medium ${i===0 ? 'border-sky-500 text-sky-600 dark:text-sky-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}">
-                                     ${categories[cat].icon} ${cat}
-                                  </button>
-                                `}).join('')}
-                           </div>
-                        </div>
-                        <div class="mt-6">
-                           ${Object.keys(categories).map((cat, i) => {
-                                const categoryId = cat.replace(/\s/g, '').replace('&', 'And');
-                                return `
-                                  <div role="tabpanel" id="panel-${categoryId}" data-category="${escapeHTML(cat)}" aria-labelledby="tab-${categoryId}" class="${i > 0 ? 'hidden' : ''}">
-                                    ${this.renderCategoryContent(cat, categories[cat].devices)}
-                                  </div>
-                                `}).join('')}
-                        </div>
+                        <div id="checklist-content" class="mt-6"></div>
                     </div>
                 `;
+                this.updateUI();
                 this.attachEventListeners();
             }
-            
-            /** Renders the content for a single category tab. */
-            renderCategoryContent(category, devices) {
-                if (devices.length === 0) {
-                    return `<p class="text-slate-500 text-center py-8">No devices in this category.</p>`;
-                }
-
-                const total = devices.length;
-                const inspectedCount = devices.filter(d => this.inspected.has(d.address)).length;
-                const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
-                
+            renderChecklistContent() {
                 return `
-                    <div class="mb-4">
-                        <div class="flex justify-between items-center mb-1 text-sm font-medium">
-                            <span class="text-slate-600 dark:text-slate-300">Progress</span>
-                            <span>${inspectedCount} / ${total} inspected (${percent}%)</span>
-                        </div>
-                        <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
-                            <div class="bg-sky-600 h-2.5 rounded-full" style="width: ${percent}%"></div>
-                        </div>
-                    </div>
-                    
+                    <div id="progress-container" class="mb-4"></div>
                     <div class="my-4">
-                        <input type="search" data-category="${escapeHTML(category)}" placeholder="Search this category..." class="block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                        <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
                     </div>
-
-                    <!-- Completed Devices Accordion -->
-                    <div id="completed-${category.replace(/\s/g, '').replace('&', 'And')}"></div>
-
-                    <!-- Active Devices Table -->
-                    <div id="active-${category.replace(/\s/g, '').replace('&', 'And')}" class="overflow-x-auto"></div>
+                    <div id="completed-container"></div>
+                    <div id="active-container" class="overflow-x-auto"></div>
                 `;
             }
-
-            /** Renders both the 'Completed' accordion and the 'Active' table for a category. */
-            renderTableAndAccordion(category) {
-                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
-                const panel = $(`#panel-${categoryId}`, this);
-                if(!panel) return;
-                
-                const allDevices = this.data.devices.filter(d => this.getDeviceCategory(d.deviceType) === category);
-                
-                // Sort devices if a sort state is set
-                const sortKey = this.sortState[category]?.key;
-                const sortDir = this.sortState[category]?.dir;
-                if(sortKey && sortDir) {
-                    allDevices.sort((a,b) => {
-                        const valA = a[sortKey]?.toString() || '';
-                        const valB = b[sortKey]?.toString() || '';
+            updateProgress() {
+                const container = $(`#progress-container`, this);
+                if (!container) return;
+                const total = this.data.devices.length;
+                const inspectedCount = this.state.checkedDevices.size;
+                const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
+                container.innerHTML = `
+                    <div class="flex justify-between items-center mb-1 text-sm font-medium">
+                        <span class="text-slate-600 dark:text-slate-300">Progress</span>
+                        <span>${inspectedCount} / ${total} inspected (${percent}%)</span>
+                    </div>
+                    <div class="w-full bg-slate-200 dark:bg-slate-700 rounded-full h-2.5">
+                        <div class="bg-sky-600 h-2.5 rounded-full transition-all duration-500" style="width: ${percent}%"></div>
+                    </div>
+                `;
+            }
+            renderTableAndAccordion() {
+                const contentContainer = $('#checklist-content', this);
+                if (!contentContainer) return;
+                contentContainer.innerHTML = this.renderChecklistContent();
+                let allDevices = [...this.data.devices];
+                const { key, dir } = this.sortState;
+                if (key && dir) {
+                    allDevices.sort((a, b) => {
+                        const valA = a[key]?.toString() || '';
+                        const valB = b[key]?.toString() || '';
                         const comparison = valA.localeCompare(valB, undefined, { numeric: true });
-                        return sortDir === 'asc' ? comparison : -comparison;
+                        return dir === 'asc' ? comparison : -comparison;
                     });
                 }
-
-                // Split devices into inspected and active lists
-                const inspectedDevices = allDevices.filter(d => this.inspected.has(d.address));
-                const activeDevices = allDevices.filter(d => !this.inspected.has(d.address));
-
-                const completedContainer = $(`#completed-${categoryId}`, panel);
-                const activeContainer = $(`#active-${categoryId}`, panel);
-
-                completedContainer.innerHTML = this.renderAccordionHTML(category, inspectedDevices);
-                activeContainer.innerHTML = this.renderTableHTML(category, activeDevices);
-                
-                this.attachTableEventListeners(panel);
+                const inspectedDevices = allDevices.filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
+                const activeDevices = allDevices.filter(d => !this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
+                const completedContainer = $(`#completed-container`, this);
+                const activeContainer = $(`#active-container`, this);
+                if (completedContainer) completedContainer.innerHTML = this.renderAccordionHTML(inspectedDevices);
+                if (activeContainer) activeContainer.innerHTML = this.renderTableHTML(activeDevices, "Remaining Devices");
+                this.updateProgress();
             }
-
-            /** Renders the accordion for completed items. */
-            renderAccordionHTML(category, devices) {
+            renderAccordionHTML(devices) {
                 if (devices.length === 0) return '';
-                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
-
                 return `
                     <div class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg">
-                        <button aria-expanded="true" aria-controls="completed-list-${categoryId}" class="accordion-toggle w-full flex justify-between items-center p-3 font-semibold bg-slate-100 dark:bg-slate-800 rounded-t-lg focus-ring">
+                        <button aria-expanded="false" aria-controls="completed-list" class="accordion-toggle w-full flex justify-between items-center p-3 font-semibold text-sm bg-slate-100 dark:bg-slate-800 rounded-t-lg focus-ring">
                            <span>Completed Devices (${devices.length})</span>
                            <svg class="accordion-arrow w-5 h-5 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
-                        <div id="completed-list-${categoryId}">
-                             ${this.renderTableHTML(category, devices)}
+                        <div id="completed-list" class="hidden overflow-x-auto">
+                             ${this.renderTableHTML(devices)}
                         </div>
                     </div>
                 `;
             }
-
-            /** Renders the HTML for a table of devices. */
-            renderTableHTML(category, devices) {
-                 const headers = [
-                    { key: 'loop', label: 'Loop' },
-                    { key: 'address', label: 'Address' },
-                    { key: 'model', label: 'Model' },
-                    { key: 'serialNumber', label: 'Serial #' },
-                    { key: 'messages', label: 'Location/Message' }
-                ];
-                return `
+            renderTableHTML(devices, title) {
+                const headers = [{ key: 'loop', label: 'Loop' }, { key: 'address', label: 'Address' }, { key: 'model', label: 'Model' }, { key: 'serialNumber', label: 'Serial #' }, { key: 'messages', label: 'Location/Message' }];
+                let table = ``;
+                if (title) table += `<h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200">${title}</h3>`
+                table += `
                     <table class="w-full text-sm text-left">
                         <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800">
                             <tr>
                                 ${headers.map(h => {
-                                    const sortDir = this.sortState[category]?.key === h.key ? this.sortState[category]?.dir : null;
-                                    return `<th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="${h.key}" ${sortDir ? `aria-sort="${sortDir === 'asc' ? 'ascending':'descending'}"` : ''}>${h.label} <svg class="inline w-3 h-3">${sortDir === 'asc' ? '▲' : (sortDir === 'desc' ? '▼' : '')}</svg></th>`;
+                                    const sortDir = this.sortState.key === h.key ? this.sortState.dir : null;
+                                    const icon = sortDir === 'asc' ? '▲' : (sortDir === 'desc' ? '▼' : '');
+                                    return `<th scope="col" class="p-3 table-header-sortable cursor-pointer whitespace-nowrap" data-sort-key="${h.key}" ${sortDir ? `aria-sort="${sortDir === 'asc' ? 'ascending':'descending'}"` : ''}>${h.label} <svg class="inline w-3 h-3">${icon}</svg></th>`;
                                 }).join('')}
                                 <th scope="col" class="p-3 text-center">
                                     <span class="sr-only">Inspected</span>✅
@@ -509,219 +678,235 @@
                         </tbody>
                     </table>
                 `;
+                return table;
             }
-
-            /** Renders a single row in the device table. */
             renderRowHTML(device) {
-                const isInspected = this.inspected.has(device.address);
+                const uniqueId = this.getUniqueDeviceId(device);
+                const isInspected = this.state.checkedDevices.has(uniqueId);
                 return `
-                    <tr data-address="${device.address}" class="hover:bg-slate-50 dark:hover:bg-slate-800/50">
-                        <td class="p-3 font-medium">${escapeHTML(String(device.loop))}</td>
-                        <td class="p-3">${escapeHTML(String(device.address))}</td>
-                        <td class="p-3">${escapeHTML(device.model)}</td>
-                        <td class="p-3">${escapeHTML(device.serialNumber)}</td>
-                        <td class="p-3 max-w-xs truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
+                    <tr data-device-id="${uniqueId}" class="device-row hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20' : ''}">
+                        <td class="p-3 font-medium whitespace-nowrap">${escapeHTML(String(device.loop))}</td>
+                        <td class="p-3 whitespace-nowrap">${escapeHTML(String(device.address))}</td>
+                        <td class="p-3 whitespace-nowrap">${escapeHTML(String(device.model))}</td>
+                        <td class="p-3 whitespace-nowrap">${escapeHTML(String(device.serialNumber))}</td>
+                        <td class="p-3 max-w-xs truncate" title="${escapeHTML(String(device.messages))}">${escapeHTML(String(device.messages))}</td>
                         <td class="p-3 text-center">
-                            <input type="checkbox" data-address="${device.address}" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus-ring" ${isInspected ? 'checked' : ''}>
+                            <input type="checkbox" data-device-id="${uniqueId}" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
                         </td>
                     </tr>
                 `;
             }
-
-            /** Attaches event listeners for the workspace (tabs, actions, search). */
             attachEventListeners() {
-                // Initial render for the first tab
-                const firstTab = $('.tab-btn', this);
-                if (firstTab) {
-                    this.renderTableAndAccordion(firstTab.dataset.category);
-                }
-
-                // Tab switching
-                $$('.tab-btn', this).forEach(btn => {
-                    btn.addEventListener('click', (e) => this.handleTabClick(e));
-                });
-
-                // Global actions (Mark All, Clear All, Export)
-                this.addEventListener('click', (e) => {
-                    const action = e.target.closest('[data-action]')?.dataset.action;
-                    if (action) this.handleGlobalAction(action);
-                });
-
-                // Accordion toggles
                 this.addEventListener('click', (e) => {
                     const toggle = e.target.closest('.accordion-toggle');
-                    if(toggle) {
-                        const content = toggle.nextElementSibling;
+                    if (toggle) {
+                        const content = this.querySelector(`#${toggle.getAttribute('aria-controls')}`);
                         const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                        toggle.setAttribute('aria-expanded', !isExpanded);
-                        content.classList.toggle('hidden');
+                        toggle.setAttribute('aria-expanded', String(!isExpanded));
+                        if(content) content.classList.toggle('hidden');
+                        return;
                     }
-                });
-
-                // Search inputs
-                $$('input[type="search"]', this).forEach(input => {
-                    input.addEventListener('input', debounce((e) => {
-                        this.filterTable(e.target.dataset.category, e.target.value);
-                    }, 250));
-                });
-            }
-
-            /** Attaches listeners specifically to tables (checkboxes, sorting). */
-            attachTableEventListeners(panel) {
-                 // Checkbox changes
-                panel.addEventListener('change', (e) => {
-                    if (e.target.type === 'checkbox') this.handleCheckboxChange(e.target);
-                });
-                // Sorting clicks
-                panel.addEventListener('click', (e) => {
+                    
                     const header = e.target.closest('.table-header-sortable');
-                    if(header) {
-                        const category = header.closest('[role=tabpanel]').dataset.category;
-                        this.handleSort(category, header.dataset.sortKey);
-                    }
+                    if (header) return this.handleSort(header.dataset.sortKey);
+                    
+                    const row = e.target.closest('.device-row');
+                    if (row) return this.handleRowClick(row);
                 });
-            }
-            
-            /** Handles switching between category tabs. */
-            handleTabClick(e) {
-                const clickedTab = e.currentTarget;
-                const category = clickedTab.dataset.category;
-
-                $$('.tab-btn', this).forEach(btn => {
-                    const panel = $(`#${btn.getAttribute('aria-controls')}`, this);
-                    if (btn === clickedTab) {
-                        btn.classList.add('border-sky-500', 'text-sky-600', 'dark:text-sky-500');
-                        btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-300');
-                        btn.setAttribute('aria-selected', 'true');
-                        panel.classList.remove('hidden');
-                        this.renderTableAndAccordion(category); // Re-render content on tab click
-                    } else {
-                        btn.classList.remove('border-sky-500', 'text-sky-600', 'dark:text-sky-500');
-                        btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-300');
-                        btn.setAttribute('aria-selected', 'false');
-                        panel.classList.add('hidden');
-                    }
-                });
+                this.addEventListener('input', debounce((e) => {
+                    if (e.target.id === 'search-input') this.filterTable(e.target.value);
+                }, 250));
             }
 
-            /** Handles a checkbox being checked or unchecked. */
-            handleCheckboxChange(checkbox) {
-                const { address } = checkbox.dataset;
-                const isInspected = checkbox.checked;
-                this.saveInspectedState(address, isInspected);
+            handleMenuAction(event) {
+                // This is called when an action is dispatched from the global menu
+                const { action } = event.detail;
+                this.handleGlobalAction(action);
+            }
+
+            handleRowClick(row) {
+                const { deviceId } = row.dataset;
+                const checkbox = row.querySelector(`input[data-device-id="${deviceId}"]`);
+                if (!checkbox) return;
+
+                const isInspected = !checkbox.checked; // The new state
                 
-                const device = this.data.devices.find(d => String(d.address) === address);
-                const category = this.getDeviceCategory(device.deviceType);
-                this.updateUI(category);
-            }
-            
-            /** Handles a click on a sortable table header. */
-            handleSort(category, key) {
-                const currentSort = this.sortState[category];
-                let newDir = (currentSort?.key === key && currentSort.dir === 'asc') ? 'desc' : 'asc';
-                this.sortState[category] = { key, dir: newDir };
-                this.updateUI(category);
-            }
-            
-            /** Handles clicks on the main action buttons. */
-            handleGlobalAction(action) {
-                const allAddresses = this.data.devices.map(d => d.address);
-                if (action === 'mark-all') {
-                    if (!confirm("Are you sure you want to mark all devices as inspected?")) return;
-                    allAddresses.forEach(address => this.saveInspectedState(address, true));
+                if (isInspected) {
+                    this.state.checkedDevices.add(deviceId);
+                    this.state.checkHistory.push(deviceId);
+                } else {
+                    this.state.checkedDevices.delete(deviceId);
+                    const historyIndex = this.state.checkHistory.indexOf(deviceId);
+                    if (historyIndex > -1) {
+                        this.state.checkHistory.splice(historyIndex, 1);
+                    }
                 }
+                
+                row.classList.add('flash-bg');
+                row.addEventListener('animationend', () => row.classList.remove('flash-bg'), { once: true });
+
+                this.saveInspectedState();
+                this.updateUI();
+                this.updateLastCheckedFooter();
+            }
+            handleSort(key) {
+                const currentSort = this.sortState;
+                let newDir = (currentSort.key === key && currentSort.dir === 'asc') ? 'desc' : 'asc';
+                this.sortState = { key, dir: newDir };
+                this.updateUI();
+            }
+            handleGlobalAction(action) {
                 if (action === 'clear-all') {
-                    if (!confirm("Are you sure you want to clear all inspection checkmarks?")) return;
-                    allAddresses.forEach(address => this.saveInspectedState(address, false));
+                    showConfirmationModal(
+                        "Are you sure you want to clear all inspection checkmarks? This action cannot be undone.",
+                        () => { // This is the onConfirm callback
+                            this.state.checkedDevices.clear();
+                            this.state.checkHistory = [];
+                            showToast('All checks cleared.', 'info');
+                            this.saveInspectedState();
+                            this.updateLastCheckedFooter();
+                            this.updateUI();
+                        }
+                    );
+                    return; // Return early to avoid running save/update twice
+                }
+
+                if (action === 'undo') {
+                    if (this.state.checkHistory.length === 0) {
+                        showToast('No actions to undo.', 'info');
+                        return;
+                    }
+                    const lastCheckedId = this.state.checkHistory.pop();
+                    this.state.checkedDevices.delete(lastCheckedId);
+                    const device = this.data.devices.find(d => this.getUniqueDeviceId(d) === lastCheckedId);
+                    showToast(`Undo: Unchecked "${device.messages}"`, 'info');
                 }
                 if (action === 'export') {
                     this.exportInspectedList();
                     return;
                 }
-                // Re-render all visible categories after action
-                $$('[role=tabpanel]').forEach(panel => {
-                    if(!panel.classList.contains('hidden')) {
-                        const category = panel.dataset.category;
-                        this.updateUI(category);
-                    }
-                });
-                showToast(`Action '${action}' completed.`, 'success');
+                this.saveInspectedState();
+                this.updateLastCheckedFooter();
+                this.updateUI();
             }
-
-            /** Exports a JSON file of the currently inspected devices. */
             exportInspectedList() {
-                const inspectedAddresses = Array.from(this.inspected);
+                const inspectedDevices = this.data.devices.filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
                 const data = JSON.stringify({
                     checklistName: this.data.name,
-                    inspectedCount: inspectedAddresses.length,
-                    inspectedAddresses: inspectedAddresses
+                    inspectedCount: inspectedDevices.length,
+                    devices: inspectedDevices
                 }, null, 2);
                 const blob = new Blob([data], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
                 a.href = url;
-                a.download = `${this.checklistKey}-inspected.json`;
+                a.download = `${this.checklistKey}-inspected-${new Date().toISOString().slice(0,10)}.json`;
                 document.body.appendChild(a);
                 a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast('Exported inspected list.', 'info');
+                showToast('Exported inspected list.', 'success');
             }
-
-            /** Filters a table based on search input. */
-            filterTable(category, query) {
+            filterTable(query) {
                 const q = query.toLowerCase();
-                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
-                const panel = $(`#panel-${categoryId}`, this);
-                $$('tbody tr', panel).forEach(row => {
-                    const text = row.textContent.toLowerCase();
-                    row.style.display = text.includes(q) ? '' : 'none';
+                $$('tbody tr', this).forEach(row => {
+                    const textContent = row.textContent.toLowerCase();
+                    const title = row.querySelector('[title]')?.title.toLowerCase() || '';
+                    row.style.display = textContent.includes(q) || title.includes(q) ? '' : 'none';
                 });
             }
-            
-            /** Updates the UI for a specific category (tables and progress bar). */
-            updateUI(category) {
-                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
-                const panel = $(`#panel-${categoryId}`, this);
-                if (!panel || panel.classList.contains('hidden')) return;
-
-                // Full re-render of the table and accordion for the category
-                this.renderTableAndAccordion(category);
-
-                // Update progress bar
-                const allDevices = this.data.devices.filter(d => this.getDeviceCategory(d.deviceType) === category);
-                const inspectedCount = allDevices.filter(d => this.inspected.has(d.address)).length;
-                const total = allDevices.length;
-                const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
-                
-                const progressText = panel.querySelector('.flex.justify-between span:last-child');
-                const progressBar = panel.querySelector('.bg-sky-600');
-                if(progressText) progressText.textContent = `${inspectedCount} / ${total} inspected (${percent}%)`;
-                if(progressBar) progressBar.style.width = `${percent}%`;
+            updateUI() {
+                this.renderTableAndAccordion();
+            }
+            updateLastCheckedFooter() {
+                const footer = $('#last-checked-footer');
+                const footerText = $('#last-checked-text');
+                if (this.state.checkHistory.length > 0) {
+                    const lastCheckedId = this.state.checkHistory[this.state.checkHistory.length - 1];
+                    const device = this.data.devices.find(d => this.getUniqueDeviceId(d) === lastCheckedId);
+                    if (device && footerText) {
+                        const idText = device.loop !== 'N/A' ? `L${device.loop}/A${device.address}` : `${device.deviceType} ${device.address}`;
+                        footerText.textContent = ` ${idText}: ${device.messages}`;
+                        footer.classList.remove('hidden');
+                    }
+                } else {
+                    if (footer) footer.classList.add('hidden');
+                }
             }
         }
         customElements.define('checklist-workspace', ChecklistWorkspace);
 
         // --- APP INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // 1. Initialize UI Picker Components
-            $('#mobile-building-picker-container').appendChild(document.createElement('building-picker'));
-            $('#desktop-building-picker-container').appendChild(document.createElement('building-picker'));
-
-            // 2. Handle checklist selection
+            // Setup Building Pickers
+            const mobilePickerContainer = $('#mobile-building-picker-container');
+            const desktopPickerContainer = $('#desktop-building-picker-container');
+            if (mobilePickerContainer) mobilePickerContainer.appendChild(document.createElement('building-picker'));
+            if (desktopPickerContainer) desktopPickerContainer.appendChild(document.createElement('building-picker'));
+            
+            // Handle Checklist Selection
             document.addEventListener('checklist-selected', (e) => {
                 const { key } = e.detail;
                 const workspaceContainer = $('#checklist-workspace');
-                $('#welcome-message')?.remove(); // Remove initial welcome message
-                
+                $('#welcome-message')?.remove();
                 let workspace = $('checklist-workspace', workspaceContainer);
                 if (!workspace) {
                     workspace = document.createElement('checklist-workspace');
-                    workspaceContainer.innerHTML = ''; // Clear container before adding
+                    workspaceContainer.innerHTML = '';
                     workspaceContainer.appendChild(workspace);
                 }
-                // Set the building-key attribute to trigger the workspace update
                 workspace.setAttribute('building-key', key);
+
+                // Make menu visible and enabled only when a checklist is active
+                $('#header-menu-container').classList.remove('invisible', 'opacity-50');
+                $('#menu-toggle-button').disabled = false;
+            });
+
+            // --- HEADER MENU LOGIC ---
+            const menuContainer = $('#header-menu-container');
+            const menuButton = $('#menu-toggle-button');
+            const menuDropdown = $('#menu-dropdown');
+            
+            // Hide menu initially and disable until a checklist is loaded
+            menuContainer.classList.add('invisible', 'opacity-50');
+            menuButton.disabled = true;
+
+            function toggleMenu(show) {
+                const isVisible = !menuDropdown.classList.contains('hidden');
+                if (typeof show !== 'boolean') {
+                    show = !isVisible;
+                }
+                menuDropdown.classList.toggle('hidden', !show);
+                menuButton.setAttribute('aria-expanded', show);
+            }
+
+            menuButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                toggleMenu();
+            });
+
+            menuDropdown.addEventListener('click', (e) => {
+                const action = e.target.closest('[data-menu-action]')?.dataset.menuAction;
+                if (action) {
+                    e.preventDefault();
+                    // Dispatch an event for the workspace to hear
+                    document.dispatchEvent(new CustomEvent('request-workspace-action', { detail: { action } }));
+                    toggleMenu(false); // Close menu after action
+                }
+            });
+
+            // Close menu when clicking outside
+            window.addEventListener('click', (e) => {
+                if (!menuContainer.contains(e.target)) {
+                    toggleMenu(false);
+                }
+            });
+
+            // Close menu with Escape key
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && !menuDropdown.classList.contains('hidden')) {
+                    toggleMenu(false);
+                }
             });
         });
     </script>
