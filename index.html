@@ -5,16 +5,38 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Omni Checklist Hub</title>
     
-    <!-- PWA & SEO Meta -->
+    <!-- PWA, SEO & Mobile Meta -->
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Omni Checklist">
+    <meta name="application-name" content="Omni Checklist">
     <meta name="description" content="Omni Technologies Device Checklist Hub for fire-alarm inspections.">
-    <meta name="theme-color" content="#1e293b">
-    <link rel="apple-touch-icon" href="https://placehold.co/180x180/1e88e5/ffffff?text=Omni">
+    <meta name="theme-color" content="#0f172a">
+    <link rel="apple-touch-icon" href="https://placehold.co/180x180/0ea5e9/ffffff?text=Omni">
+    <link rel="manifest" href="data:application/manifest+json,{
+        &quot;name&quot;: &quot;Omni Checklist Hub&quot;,
+        &quot;short_name&quot;: &quot;OmniCheck&quot;,
+        &quot;start_url&quot;: &quot;.&quot;,
+        &quot;display&quot;: &quot;standalone&quot;,
+        &quot;background_color&quot;: &quot;#0f172a&quot;,
+        &quot;theme_color&quot;: &quot;#0ea5e9&quot;,
+        &quot;description&quot;: &quot;A checklist application for Omni inspectors.&quot;,
+        &quot;icons&quot;: [{
+            &quot;src&quot;: &quot;https://placehold.co/192x192/0ea5e9/ffffff?text=Omni&quot;,
+            &quot;sizes&quot;: &quot;192x192&quot;,
+            &quot;type&quot;: &quot;image/png&quot;
+        }, {
+            &quot;src&quot;: &quot;https://placehold.co/512x512/0ea5e9/ffffff?text=Omni&quot;,
+            &quot;sizes&quot;: &quot;512x512&quot;,
+            &quot;type&quot;: &quot;image/png&quot;
+        }]
+    }">
     
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
-        darkMode: 'media',
+        darkMode: 'media', // or 'class'
         theme: {
           extend: {
             fontFamily: {
@@ -23,6 +45,7 @@
             colors: {
               slate: {
                 850: '#17202e',
+                950: '#0f172a',
               }
             }
           }
@@ -32,36 +55,28 @@
     
     <!-- Custom Styles -->
     <style type="text/css">
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;900&display=swap');
+      
+      /* Base styles */
       body { 
         font-family: 'Inter', sans-serif;
         -webkit-font-smoothing: antialiased;
         -moz-osx-font-smoothing: grayscale;
-        /* Prevent footer from overlapping content, accounts for footer height */
-        padding-bottom: 56px; 
+        padding-bottom: 56px; /* Prevent footer from overlapping content */
       }
-      /* Custom focus rings for better accessibility */
-      .focus-ring { @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-900 focus:ring-sky-500; }
       
-      /* Arrow rotation for accordion */
+      /* Custom focus rings for better accessibility */
+      .focus-ring { 
+        @apply focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-slate-950 focus:ring-sky-500; 
+      }
+      
+      /* Arrow rotation for accordion (used for completed devices) */
       [aria-expanded="true"] .accordion-arrow { transform: rotate(180deg); }
-      [aria-expanded="true"] .details-arrow { transform: rotate(180deg); }
       
       /* Styling for sortable table headers */
-      .table-header-sortable:hover { @apply bg-slate-200 dark:bg-slate-700; }
+      .table-header-sortable:hover { @apply bg-slate-200 dark:bg-slate-700/50; }
       .table-header-sortable svg { opacity: 0.5; transition: opacity 0.2s; }
       .table-header-sortable[aria-sort] svg { opacity: 1; }
-      
-      /* Base styles for rows (mobile-first card approach) */
-      .device-row {
-          @apply block border-b border-slate-200 dark:border-slate-700 p-4 cursor-pointer;
-      }
-      /* Transition to table row on larger screens */
-      @screen sm {
-          .device-row {
-              @apply table-row p-0 border-b-0;
-          }
-      }
       
       /* Visual feedback on check/uncheck */
       @keyframes flash-sky {
@@ -73,28 +88,29 @@
         animation: flash-sky 0.5s ease-out;
       }
       
-      /* Sticky footer styles */
+      /* Sticky footer styles with blur effect */
       .sticky-footer {
-            backdrop-filter: blur(10px);
-            background-color: rgba(241, 245, 249, 0.85); /* light mode bg */
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        background-color: rgba(248, 250, 252, 0.85); /* light mode bg */
       }
       .dark .sticky-footer {
-          background-color: rgba(30, 41, 59, 0.85); /* dark mode bg */
+          background-color: rgba(15, 23, 42, 0.85); /* dark mode bg */
       }
     </style>
 </head>
-<body class="bg-slate-100 dark:bg-slate-850 text-slate-800 dark:text-slate-200">
+<body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
 
     <div id="app-container" class="relative min-h-screen">
         
         <!-- Header -->
-        <header class="bg-white/75 dark:bg-slate-900/75 backdrop-blur-sm sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800">
+        <header class="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md sticky top-0 z-40 w-full border-b border-slate-200 dark:border-slate-800">
             <div class="max-w-screen-2xl mx-auto px-4 sm:px-6 lg:px-8">
                 <div class="flex items-center justify-between h-16">
                     <!-- Left Side: Title -->
                     <div class="flex items-center">
                         <span class="text-2xl font-bold text-sky-600 dark:text-sky-500">✅</span>
-                        <h1 class="ml-3 text-xl font-bold tracking-tight">Omni Checklist Hub</h1>
+                        <h1 class="ml-3 text-xl font-bold tracking-tight">Omni Checklist</h1>
                     </div>
                     
                     <!-- Right Side: Hamburger Menu -->
@@ -107,16 +123,10 @@
                         
                         <div id="menu-dropdown" class="hidden absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-toggle-button" tabindex="-1">
                             <div class="py-1" role="none">
-                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-undo" data-menu-action="undo">
-                                    Undo Last Check
-                                </a>
-                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-export" data-menu-action="export">
-                                    Export Inspected List
-                                </a>
+                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-undo" data-menu-action="undo">Undo Last Check</a>
+                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-export" data-menu-action="export">Export Inspected List</a>
                                 <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
-                                <a href="#" class="text-red-600 dark:text-red-400 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-clear" data-menu-action="clear-all">
-                                    Clear All Checkmarks...
-                                </a>
+                                <a href="#" class="text-red-600 dark:text-red-400 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-clear" data-menu-action="clear-all">Clear All Checkmarks...</a>
                             </div>
                         </div>
                     </div>
@@ -127,13 +137,13 @@
         </header>
 
         <!-- Main Content -->
-        <main class="max-w-screen-2xl mx-auto p-4 sm:p-6 lg:p-8">
+        <main class="max-w-screen-2xl mx-auto p-2 sm:p-6 lg:p-8">
             <div class="flex flex-col sm:flex-row gap-8">
                 <!-- Checklist Workspace -->
                 <div id="checklist-workspace" class="flex-grow">
-                     <div id="welcome-message" class="text-center py-20">
+                     <div id="welcome-message" class="text-center py-20 px-4">
                         <h2 class="text-2xl font-semibold text-slate-600 dark:text-slate-400">Welcome, Inspector!</h2>
-                        <p class="mt-2 text-slate-500">Please select a checklist from the list to begin.</p>
+                        <p class="mt-2 text-slate-500">Please select a checklist from the list above to begin your inspection.</p>
                     </div>
                 </div>
 
@@ -144,7 +154,7 @@
         </main>
         
         <!-- Last Checked Footer -->
-        <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-700 sticky-footer z-30 hidden">
+        <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800 sticky-footer z-30 hidden">
             <div class="max-w-screen-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
                 <p class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate">
                     Last Checked: <span id="last-checked-text" class="font-bold text-sky-600 dark:text-sky-500"></span>
@@ -153,11 +163,10 @@
         </footer>
 
         <!-- Toasts/Notifications Container -->
-        <div id="toast-container" aria-live="assertive" aria-atomic="true" class="fixed bottom-16 right-0 p-4 sm:p-6 space-y-3 z-50 w-full max-w-sm">
-        </div>
+        <div id="toast-container" aria-live="assertive" aria-atomic="true" class="fixed bottom-16 right-0 p-4 sm:p-6 space-y-3 z-50 w-full max-w-sm"></div>
         
         <!-- Confirmation Modal -->
-        <div id="confirmation-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm z-50 hidden items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <div id="confirmation-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm z-50 hidden items-center justify-center p-4" aria-labelledby="modal-title" role="dialog" aria-modal="true">
             <div id="confirmation-modal-panel" class="relative transform overflow-hidden rounded-lg bg-white dark:bg-slate-800 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg opacity-0 translate-y-4 sm:translate-y-0 sm:scale-95">
                 <div class="bg-white dark:bg-slate-800 px-4 pt-5 pb-4 sm:p-6 sm:pb-4">
                     <div class="sm:flex sm:items-start">
@@ -173,29 +182,25 @@
                     </div>
                 </div>
                 <div class="bg-slate-50 dark:bg-slate-800/50 px-4 py-3 sm:flex sm:flex-row-reverse sm:px-6">
-                    <button type="button" id="modal-confirm-button" class="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2 dark:focus:ring-offset-slate-800 sm:ml-3 sm:w-auto sm:text-sm">Confirm</button>
+                    <button type="button" id="modal-confirm-button" class="inline-flex w-full justify-center rounded-md border border-transparent bg-red-600 px-4 py-2 text-base font-medium text-white shadow-sm hover:bg-red-700 focus-ring sm:ml-3 sm:w-auto sm:text-sm">Confirm</button>
                     <button type="button" id="modal-cancel-button" class="mt-3 inline-flex w-full justify-center rounded-md border border-slate-300 dark:border-slate-600 bg-white dark:bg-slate-700 px-4 py-2 text-base font-medium text-slate-700 dark:text-slate-200 shadow-sm hover:bg-slate-50 dark:hover:bg-slate-600 focus-ring sm:mt-0 sm:w-auto sm:text-sm">Cancel</button>
                 </div>
             </div>
         </div>
-
-
     </div>
     
     <!-- Main Application Logic -->
     <script type="module">
         // ===================================================================================
         // --- CHECKLIST DATA ---
-        // You can add new checklists here. The app will automatically detect the format
-        // (SAS or Excel) and display the data in the unified table.
+        // All original data is preserved here.
         // ===================================================================================
         const CHECKLISTS = [
           {
-            key: "mcfarland_psc", // Unique key for localStorage
+            key: "mcfarland_psc",
             name: "McFarland Public Safety Center",
             location: "Fire Alarm Device Inspection",
             devices: [
-              // All McFarland devices...
               { loop: 1, address: 1, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3939747909', messages: 'BASEMENT SMOKE ABOVE FACP' },
               { loop: 1, address: 2, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3831067556', messages: 'BASEMENT HEAT BY SPRINK PIPING' },
               { loop: 1, address: 3, model: 'HRS', deviceType: 'Heat ROR', serialNumber: '3828858723', messages: 'BASEMENT HEAT MECHANICAL RM' },
@@ -321,7 +326,7 @@
             ]
           },
           {
-            key: "purina_facility", // Data from your Excel/CSV file
+            key: "purina_facility",
             name: "Purina Facility",
             location: "Device List Report",
             devices: [
@@ -701,17 +706,11 @@
         }
 
         /**
-         * Converts any device object into a single, standardized format.
-         * This allows the table to display data from different sources seamlessly.
-         * @param {object} device - The original device object from the CHECKLISTS array.
-         * @returns {object} A new object with a consistent set of properties.
+         * Normalizes device data from different sources into a consistent format.
          */
         function normalizeDevice(device) {
-            // Check if the device is from an Excel/CSV import by looking for its unique column header.
             const isExcelFormat = device.hasOwnProperty('System Address ( Node : Card : Device )');
-
             if (isExcelFormat) {
-                // If it's Excel format, map its properties to the standard format.
                 const systemAddress = device['System Address ( Node : Card : Device )'] || 'N/A:N/A:N/A';
                 const addressParts = String(systemAddress).split(':');
                 return {
@@ -722,24 +721,25 @@
                     deviceType: device['SKU Description'] || '',
                     deviceTypeID: device['Device Type ID'] || '',
                     serialNumber: device['Serial Number'] || '',
-                    messages: (device['Location Text'] || '').replace(/\n/g, ' '), // Replace newlines for better display
+                    messages: (device['Location Text'] || '').replace(/\n/g, ' '),
                 };
             } else {
-                // If it's the original SAS format, map its properties, leaving Excel-specific ones blank.
                 return {
                     loop: device.loop || '',
                     address: device.address || '',
-                    systemAddress: '', // This format doesn't have a 'System Address'
+                    systemAddress: '',
                     model: device.model || '',
                     deviceType: device.deviceType || '',
-                    deviceTypeID: '', // This format doesn't have a 'Device Type ID'
+                    deviceTypeID: '',
                     serialNumber: device.serialNumber || '',
                     messages: device.messages || '',
                 };
             }
         }
 
-
+        /**
+         * Shows a temporary notification toast.
+         */
         function showToast(message, type = 'info') {
             const container = $('#toast-container');
             if (!container) return;
@@ -774,13 +774,10 @@
         
         function showConfirmationModal(message, onConfirm) {
             if (!modal) return;
-            
             modalMessage.textContent = message;
             confirmCallback = onConfirm;
-            
             modal.classList.remove('hidden');
             modal.classList.add('flex');
-            
             requestAnimationFrame(() => {
                 modalPanel.classList.remove('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
             });
@@ -788,32 +785,27 @@
         
         function hideConfirmationModal() {
              if (!modal) return;
-             
              modalPanel.classList.add('opacity-0', 'translate-y-4', 'sm:translate-y-0', 'sm:scale-95');
              modal.addEventListener('transitionend', () => {
                 modal.classList.add('hidden');
                 modal.classList.remove('flex');
              }, { once: true });
-
              confirmCallback = null;
         }
-
         confirmButton.addEventListener('click', () => {
-            if (typeof confirmCallback === 'function') {
-                confirmCallback();
-            }
+            if (typeof confirmCallback === 'function') confirmCallback();
             hideConfirmationModal();
         });
-
         cancelButton.addEventListener('click', hideConfirmationModal);
         modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                hideConfirmationModal();
-            }
+            if (e.target === modal) hideConfirmationModal();
         });
 
         // --- WEB COMPONENTS ---
         
+        // --- BuildingPicker Web Component ---
+        // Handles the display and logic for selecting a checklist.
+        // It renders a dropdown for mobile and a sidebar list for desktop.
         class BuildingPicker extends HTMLElement {
             constructor() {
                 super();
@@ -836,7 +828,7 @@
                 this.attachEventListeners();
             }
             getMobileHTML() {
-                if (this.checklists.length === 0) return `<p class="text-center text-sm text-slate-500">No checklists available.</p>`;
+                 if (this.checklists.length === 0) return `<p class="text-center text-sm text-slate-500">No checklists available.</p>`;
                 return `
                     <label for="building-select" class="sr-only">Select Checklist</label>
                     <select id="building-select" class="w-full bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
@@ -846,9 +838,9 @@
                 `;
             }
             getDesktopHTML() {
-                return `
+                 return `
                     <div class="sticky top-20">
-                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow-md p-4">
+                        <div class="bg-white dark:bg-slate-900 rounded-xl shadow p-4">
                             <h2 class="text-lg font-semibold mb-3">Checklists</h2>
                              <input type="search" id="building-search" placeholder="Search checklists..." class="mb-3 block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
                             <ul id="building-list" class="space-y-1 max-h-[calc(100vh-12rem)] overflow-y-auto">
@@ -906,18 +898,22 @@
         }
         customElements.define('building-picker', BuildingPicker);
         
+        
+        // --- ChecklistWorkspace Web Component ---
+        // This is the core component that manages and renders the selected checklist.
         class ChecklistWorkspace extends HTMLElement {
             constructor() {
                 super();
                 this.data = null;
                 this.checklistKey = null;
-                this.sortState = { key: 'address', dir: 'asc' }; // Default sort
+                this.sortState = { key: 'address', dir: 'asc' };
                 this.state = {
                     checkedDevices: new Set(),
                     checkHistory: [],
                 };
                 this.handleMenuAction = this.handleMenuAction.bind(this);
             }
+            
             static get observedAttributes() { return ['building-key']; }
 
             connectedCallback() {
@@ -986,7 +982,7 @@
                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">${escapeHTML(this.data.name)}</h2>
                            <p class="text-slate-500 dark:text-slate-400">${escapeHTML(this.data.location)}</p>
                         </header>
-                        <div id="checklist-content" class="p-4 sm:p-6"></div>
+                        <div id="checklist-content" class="p-0 sm:p-6"></div>
                     </div>
                 `;
                 this.updateUI();
@@ -995,12 +991,14 @@
 
             renderChecklistContent() {
                 return `
-                    <div id="progress-container" class="mb-4"></div>
-                    <div class="my-4">
-                        <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                    <div class="p-4 sm:p-0">
+                        <div id="progress-container" class="mb-4"></div>
+                        <div class="my-4">
+                            <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                        </div>
                     </div>
-                    <div id="completed-container"></div>
-                    <div id="active-container" class="border border-slate-200 dark:border-slate-700 rounded-lg overflow-hidden"></div>
+                    <div id="completed-container" class="px-4 sm:px-0"></div>
+                    <div id="active-container"></div>
                 `;
             }
 
@@ -1027,24 +1025,19 @@
                 contentContainer.innerHTML = this.renderChecklistContent();
                 
                 let allDevices = [...this.data.devices];
-                const { key, dir } = this.sortState;
-                if (key && dir) {
-                    allDevices.sort((a, b) => {
-                        const valA = a[key]?.toString() || '';
-                        const valB = b[key]?.toString() || '';
-                        const comparison = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
-                        return dir === 'asc' ? comparison : -comparison;
-                    });
-                }
+                // Sorting logic
+                allDevices.sort((a, b) => {
+                    const valA = a[this.sortState.key]?.toString() || '';
+                    const valB = b[this.sortState.key]?.toString() || '';
+                    const comparison = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+                    return this.sortState.dir === 'asc' ? comparison : -comparison;
+                });
                 
                 const inspectedDevices = allDevices.filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
                 const activeDevices = allDevices.filter(d => !this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
                 
-                const completedContainer = $(`#completed-container`, this);
-                const activeContainer = $(`#active-container`, this);
-
-                if (completedContainer) completedContainer.innerHTML = this.renderAccordionHTML(inspectedDevices);
-                if (activeContainer) activeContainer.innerHTML = this.renderTableHTML(activeDevices, "Remaining Devices");
+                $(`#completed-container`, this).innerHTML = this.renderAccordionHTML(inspectedDevices);
+                $(`#active-container`, this).innerHTML = this.renderListHTML(activeDevices);
                 
                 this.updateProgress();
             }
@@ -1052,97 +1045,103 @@
             renderAccordionHTML(devices) {
                 if (devices.length === 0) return '';
                 return `
-                    <div class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg">
-                        <button aria-expanded="false" aria-controls="completed-list" class="accordion-toggle w-full flex justify-between items-center p-3 font-semibold text-sm bg-slate-100 dark:bg-slate-800 rounded-t-lg focus-ring">
+                    <div class="mb-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                        <button aria-expanded="false" aria-controls="completed-list" class="accordion-toggle w-full flex justify-between items-center p-3 font-semibold text-sm bg-slate-100 dark:bg-slate-800/80 rounded-t-lg focus-ring">
                            <span>Completed Devices (${devices.length})</span>
                            <svg class="accordion-arrow w-5 h-5 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
-                        <div id="completed-list" class="hidden overflow-hidden border-t border-slate-200 dark:border-slate-700">
-                             ${this.renderTableHTML(devices)}
+                        <div id="completed-list" class="hidden">
+                            ${this.renderListHTML(devices, false)}
                         </div>
                     </div>
                 `;
             }
-
-            renderTableHTML(devices, title) {
-                const headers = [
-                    { key: 'systemAddress', label: 'Sys. Address' },
-                    { key: 'loop', label: 'Loop' },
-                    { key: 'address', label: 'Address' },
-                    { key: 'model', label: 'SKU/Model' },
-                    { key: 'deviceType', label: 'Type' },
-                    { key: 'deviceTypeID', label: 'Type ID' },
-                    { key: 'serialNumber', label: 'Serial #' },
-                    { key: 'messages', label: 'Location/Message' }
-                ];
-                let table = ``;
-                if (title) table += `<h3 class="text-lg font-semibold mb-2 text-slate-800 dark:text-slate-200 px-4 pt-4 sm:px-0 sm:pt-0">${title}</h3>`;
-                table += `
+            
+            renderListHTML(devices, showHeader = true) {
+                 // The main container is a table for desktop and a div for mobile
+                return `
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
+                           ${showHeader ? `
                             <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800 hidden sm:table-header-group">
                                 <tr>
-                                    ${headers.map(h => {
-                                        const sortDir = this.sortState.key === h.key ? this.sortState.dir : null;
-                                        const icon = sortDir === 'asc' ? '▲' : (sortDir === 'desc' ? '▼' : '');
-                                        return `<th scope="col" class="p-3 table-header-sortable cursor-pointer whitespace-nowrap" data-sort-key="${h.key}" ${sortDir ? `aria-sort="${sortDir === 'asc' ? 'ascending':'descending'}"` : ''}>${h.label} <svg class="inline w-3 h-3">${icon}</svg></th>`;
-                                    }).join('')}
-                                    <th scope="col" class="p-3 text-center">
-                                        <span class="sr-only">Inspected</span>✅
-                                    </th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="loop">Loop <svg class="inline w-3 h-3">...</svg></th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="address">Address <svg class="inline w-3 h-3">...</svg></th>
+                                    <th scope="col" class="p-3">Location/Message</th>
+                                    <th scope="col" class="p-3">Type</th>
+                                    <th scope="col" class="p-3">Model/SKU</th>
+                                    <th scope="col" class="p-3">Serial #</th>
+                                    <th scope="col" class="p-3 text-center">✅</th>
                                 </tr>
-                            </thead>
-                            <tbody class="divide-y divide-slate-200 dark:divide-slate-700 sm:divide-y-0">
-                               ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr class="device-row"><td colspan="${headers.length + 1}" class="sm:table-cell p-4 text-center text-slate-500">No devices to show.</td></tr>`}
+                            </thead>` : ''}
+                            <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
+                               ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr class="device-row"><td colspan="7" class="sm:table-cell p-4 text-center text-slate-500">No devices to show.</td></tr>`}
                             </tbody>
                         </table>
                     </div>
                 `;
-                return table;
             }
-
+            
+            // --- THIS IS THE KEY FUNCTION THAT WAS REBUILT ---
+            // It now creates a rich, detailed card for mobile that shows all info at once.
             renderRowHTML(device) {
                 const uniqueId = this.getUniqueDeviceId(device);
                 const isInspected = this.state.checkedDevices.has(uniqueId);
                 
-                // Mobile-first card layout, becomes a table row on 'sm' screens
                 return `
-                    <tr data-device-id="${uniqueId}" class="device-row hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20' : ''}">
+                    <tr data-device-id="${uniqueId}" class="device-row block sm:table-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20 opacity-70' : ''}">
                         
-                        <!-- Mobile Card View -->
-                        <td class="sm:hidden w-full">
-                            <div class="flex items-start justify-between gap-4">
-                                <div class="flex-grow">
-                                    <p class="font-bold text-slate-800 dark:text-slate-100 truncate pr-2" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</p>
-                                    <p class="text-slate-600 dark:text-slate-400 text-xs">${escapeHTML(device.model)} - ${escapeHTML(device.deviceType)}</p>
+                        <!-- Mobile Card View (Rebuilt for app-like feel) -->
+                        <td class="sm:hidden w-full p-3">
+                            <div class="flex items-center justify-between gap-3 w-full">
+                                <div class="flex-grow space-y-3">
+                                    <div class="flex items-start gap-3">
+                                        <!-- Loop/Address Block -->
+                                        <div class="flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-md p-2 text-center w-20">
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loop</p>
+                                            <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.loop) || 'N/A'}</p>
+                                            <hr class="border-slate-300 dark:border-slate-600 my-1">
+                                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Address</p>
+                                            <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.address) || 'N/A'}</p>
+                                        </div>
+                                        
+                                        <!-- Description/Type Block -->
+                                        <div class="flex-grow pt-1">
+                                            <p class="font-semibold text-slate-800 dark:text-slate-100 leading-tight">${escapeHTML(device.messages)}</p>
+                                            <p class="text-sm text-slate-600 dark:text-slate-400">${escapeHTML(device.deviceType)}</p>
+                                        </div>
+                                    </div>
+
+                                    <!-- All Details Block (No longer hidden) -->
+                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 pl-1">
+                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Serial #:</dt>
+                                        <dd class="truncate col-span-1">${escapeHTML(device.serialNumber) || 'N/A'}</dd>
+                                        
+                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Model/SKU:</dt>
+                                        <dd class="truncate col-span-1">${escapeHTML(device.model) || 'N/A'}</dd>
+                                        
+                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Sys. Address:</dt>
+                                        <dd class="col-span-1">${escapeHTML(device.systemAddress) || 'N/A'}</dd>
+                                        
+                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Type ID:</dt>
+                                        <dd class="col-span-1">${escapeHTML(device.deviceTypeID) || 'N/A'}</dd>
+                                    </dl>
                                 </div>
+                                
+                                <!-- Checkbox -->
                                 <div class="flex-shrink-0">
-                                    <input type="checkbox" data-device-id="${uniqueId}" class="h-6 w-6 rounded border-slate-400 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
-                                </div>
-                            </div>
-                            <div class="mt-3">
-                                <button aria-expanded="false" class="details-toggle text-xs font-semibold text-sky-600 dark:text-sky-500 hover:underline flex items-center gap-1">
-                                    Show Details
-                                    <svg class="details-arrow w-3 h-3 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-                                </button>
-                                <div class="device-details hidden mt-2 text-xs space-y-1 text-slate-500 dark:text-slate-400 border-l-2 border-slate-200 dark:border-slate-700 pl-3">
-                                    <p><strong>Sys. Address:</strong> ${escapeHTML(device.systemAddress) || 'N/A'}</p>
-                                    <p><strong>Loop/Address:</strong> ${escapeHTML(device.loop) || 'N/A'} / ${escapeHTML(device.address) || 'N/A'}</p>
-                                    <p><strong>Type ID:</strong> ${escapeHTML(device.deviceTypeID) || 'N/A'}</p>
-                                    <p><strong>Serial #:</strong> ${escapeHTML(device.serialNumber) || 'N/A'}</p>
+                                    <input type="checkbox" data-device-id="${uniqueId}" class="h-8 w-8 rounded-md border-slate-400 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
                                 </div>
                             </div>
                         </td>
 
-                        <!-- Desktop Table Cells -->
-                        <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.systemAddress)}</td>
+                        <!-- Desktop Table Cells (Unchanged) -->
                         <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.loop)}</td>
-                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.address)}</td>
-                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.model)}</td>
+                        <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.address)}</td>
+                        <td class="hidden sm:table-cell p-3 max-w-sm truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
                         <td class="hidden sm:table-cell p-3 max-w-xs truncate" title="${escapeHTML(device.deviceType)}">${escapeHTML(device.deviceType)}</td>
-                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.deviceTypeID)}</td>
+                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.model)}</td>
                         <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.serialNumber)}</td>
-                        <td class="hidden sm:table-cell p-3 max-w-xs truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
                         <td class="hidden sm:table-cell p-3 text-center">
                             <input type="checkbox" data-device-id="${uniqueId}" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
                         </td>
@@ -1153,35 +1152,19 @@
             attachEventListeners() {
                 this.addEventListener('click', (e) => {
                     const row = e.target.closest('.device-row');
-                    const detailsToggle = e.target.closest('.details-toggle');
+                    const accordionToggle = e.target.closest('.accordion-toggle');
 
-                    if (detailsToggle) {
-                        e.stopPropagation(); // Prevent row click from firing
-                        const detailsContent = detailsToggle.nextElementSibling;
-                        const isExpanded = detailsToggle.getAttribute('aria-expanded') === 'true';
-                        detailsToggle.setAttribute('aria-expanded', String(!isExpanded));
-                        detailsToggle.firstChild.textContent = isExpanded ? 'Show Details' : 'Hide Details';
-                        if(detailsContent) detailsContent.classList.toggle('hidden');
+                    if (accordionToggle) {
+                        const content = this.querySelector(`#${accordionToggle.getAttribute('aria-controls')}`);
+                        const isExpanded = accordionToggle.getAttribute('aria-expanded') === 'true';
+                        accordionToggle.setAttribute('aria-expanded', String(!isExpanded));
+                        if(content) content.classList.toggle('hidden');
                         return;
                     }
                     
                     if (row) return this.handleRowClick(row);
                 });
                 
-                this.addEventListener('click', (e) => {
-                    const toggle = e.target.closest('.accordion-toggle');
-                    if (toggle) {
-                        const content = this.querySelector(`#${toggle.getAttribute('aria-controls')}`);
-                        const isExpanded = toggle.getAttribute('aria-expanded') === 'true';
-                        toggle.setAttribute('aria-expanded', String(!isExpanded));
-                        if(content) content.classList.toggle('hidden');
-                        return;
-                    }
-                    
-                    const header = e.target.closest('.table-header-sortable');
-                    if (header) return this.handleSort(header.dataset.sortKey);
-                });
-
                 this.addEventListener('input', debounce((e) => {
                     if (e.target.id === 'search-input') this.filterTable(e.target.value);
                 }, 250));
@@ -1215,16 +1198,11 @@
                 this.updateUI();
                 this.updateLastCheckedFooter();
             }
-            handleSort(key) {
-                const currentSort = this.sortState;
-                let newDir = (currentSort.key === key && currentSort.dir === 'asc') ? 'desc' : 'asc';
-                this.sortState = { key, dir: newDir };
-                this.updateUI();
-            }
+
             handleGlobalAction(action) {
                 if (action === 'clear-all') {
                     showConfirmationModal(
-                        "Are you sure you want to clear all inspection checkmarks? This action cannot be undone.",
+                        "Are you sure you want to clear all inspection checkmarks for this list? This cannot be undone.",
                         () => { 
                             this.state.checkedDevices.clear();
                             this.state.checkHistory = [];
@@ -1249,18 +1227,26 @@
                         showToast(`Undo: Unchecked "${device.messages}"`, 'info');
                     }
                 }
+                
                 if (action === 'export') {
                     this.exportInspectedList();
                     return;
                 }
+                
                 this.saveInspectedState();
                 this.updateLastCheckedFooter();
                 this.updateUI();
             }
+            
             exportInspectedList() {
                 const inspectedDevices = this.data.devices.filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
+                if(inspectedDevices.length === 0) {
+                    showToast('No inspected devices to export.', 'info');
+                    return;
+                }
                 const data = JSON.stringify({
                     checklistName: this.data.name,
+                    exportDate: new Date().toISOString(),
                     inspectedCount: inspectedDevices.length,
                     devices: inspectedDevices
                 }, null, 2);
@@ -1270,32 +1256,30 @@
                 a.href = url;
                 a.download = `${this.checklistKey}-inspected-${new Date().toISOString().slice(0,10)}.json`;
                 document.body.appendChild(a);
-                a.click();
+a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
-                showToast('Exported inspected list.', 'success');
+                showToast('Exported inspected list as JSON.', 'success');
             }
+            
             filterTable(query) {
                 const q = query.toLowerCase();
                 $$('.device-row', this).forEach(row => {
                     const textContent = row.textContent.toLowerCase();
-                    row.style.display = textContent.includes(q) ? '' : 'none';
+                    const shouldShow = textContent.includes(q);
                     
-                    // On desktop, we want to maintain the table display property
-                    if (window.innerWidth >= 640) {
-                        if (textContent.includes(q)) {
-                           row.style.display = 'table-row';
-                        }
-                    } else {
-                         if (textContent.includes(q)) {
-                           row.style.display = 'block';
-                        }
+                    if (window.innerWidth >= 640) { // Desktop
+                        row.style.display = shouldShow ? 'table-row' : 'none';
+                    } else { // Mobile
+                         row.style.display = shouldShow ? 'block' : 'none';
                     }
                 });
             }
+            
             updateUI() {
                 this.renderTableAndAccordion();
             }
+            
             updateLastCheckedFooter() {
                 const footer = $('#last-checked-footer');
                 const footerText = $('#last-checked-text');
@@ -1344,6 +1328,7 @@
             const menuButton = $('#menu-toggle-button');
             const menuDropdown = $('#menu-dropdown');
             
+            // Initially hide menu until a checklist is loaded
             menuContainer.classList.add('invisible', 'opacity-50');
             menuButton.disabled = true;
 
@@ -1371,7 +1356,6 @@
             window.addEventListener('click', (e) => {
                 if (!menuContainer.contains(e.target)) toggleMenu(false);
             });
-
             window.addEventListener('keydown', (e) => {
                 if (e.key === 'Escape' && !menuDropdown.classList.contains('hidden')) toggleMenu(false);
             });
