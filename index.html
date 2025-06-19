@@ -375,19 +375,23 @@
                         </header>
                         <div id="tab-container" class="border-b border-slate-200 dark:border-slate-700">
                            <div role="tablist" aria-label="Device Categories" class="flex flex-wrap -mb-px">
-                              ${Object.keys(categories).map((cat, i) => `
-                                  <button role="tab" id="tab-${cat.replace(/\s/g, '')}" aria-controls="panel-${cat.replace(/\s/g, '')}" aria-selected="${i===0}" class="tab-btn inline-flex items-center gap-2 p-3 sm:p-4 border-b-2 font-medium ${i===0 ? 'border-sky-500 text-sky-600 dark:text-sky-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}">
+                              ${Object.keys(categories).map((cat, i) => {
+                                const categoryId = cat.replace(/\s/g, '').replace('&', 'And');
+                                return `
+                                  <button role="tab" id="tab-${categoryId}" data-category="${escapeHTML(cat)}" aria-controls="panel-${categoryId}" aria-selected="${i===0}" class="tab-btn inline-flex items-center gap-2 p-3 sm:p-4 border-b-2 font-medium ${i===0 ? 'border-sky-500 text-sky-600 dark:text-sky-500' : 'border-transparent text-slate-500 hover:text-slate-700 dark:hover:text-slate-300 hover:border-slate-300 dark:hover:border-slate-600'}">
                                      ${categories[cat].icon} ${cat}
                                   </button>
-                              `).join('')}
+                                `}).join('')}
                            </div>
                         </div>
                         <div class="mt-6">
-                           ${Object.keys(categories).map((cat, i) => `
-                              <div role="tabpanel" id="panel-${cat.replace(/\s/g, '')}" aria-labelledby="tab-${cat.replace(/\s/g, '')}" class="${i > 0 ? 'hidden' : ''}">
-                                 ${this.renderCategoryContent(cat, categories[cat].devices)}
-                              </div>
-                           `).join('')}
+                           ${Object.keys(categories).map((cat, i) => {
+                                const categoryId = cat.replace(/\s/g, '').replace('&', 'And');
+                                return `
+                                  <div role="tabpanel" id="panel-${categoryId}" data-category="${escapeHTML(cat)}" aria-labelledby="tab-${categoryId}" class="${i > 0 ? 'hidden' : ''}">
+                                    ${this.renderCategoryContent(cat, categories[cat].devices)}
+                                  </div>
+                                `}).join('')}
                         </div>
                     </div>
                 `;
@@ -404,8 +408,6 @@
                 const inspectedCount = devices.filter(d => this.inspected.has(d.address)).length;
                 const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
                 
-                const categoryId = category.replace(/\s/g, '');
-
                 return `
                     <div class="mb-4">
                         <div class="flex justify-between items-center mb-1 text-sm font-medium">
@@ -418,20 +420,20 @@
                     </div>
                     
                     <div class="my-4">
-                        <input type="search" data-category="${categoryId}" placeholder="Search this category..." class="block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                        <input type="search" data-category="${escapeHTML(category)}" placeholder="Search this category..." class="block w-full bg-slate-100 dark:bg-slate-800 border border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
                     </div>
 
                     <!-- Completed Devices Accordion -->
-                    <div id="completed-${categoryId}"></div>
+                    <div id="completed-${category.replace(/\s/g, '').replace('&', 'And')}"></div>
 
                     <!-- Active Devices Table -->
-                    <div id="active-${categoryId}" class="overflow-x-auto"></div>
+                    <div id="active-${category.replace(/\s/g, '').replace('&', 'And')}" class="overflow-x-auto"></div>
                 `;
             }
 
             /** Renders both the 'Completed' accordion and the 'Active' table for a category. */
             renderTableAndAccordion(category) {
-                const categoryId = category.replace(/\s/g, '');
+                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
                 const panel = $(`#panel-${categoryId}`, this);
                 if(!panel) return;
                 
@@ -465,7 +467,7 @@
             /** Renders the accordion for completed items. */
             renderAccordionHTML(category, devices) {
                 if (devices.length === 0) return '';
-                const categoryId = category.replace(/\s/g, '');
+                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
 
                 return `
                     <div class="mb-4 border border-slate-200 dark:border-slate-700 rounded-lg">
@@ -528,12 +530,14 @@
 
             /** Attaches event listeners for the workspace (tabs, actions, search). */
             attachEventListeners() {
-                // Trigger first tab content render.
-                $$('.tab-btn', this).forEach((btn, index) => {
-                    const category = btn.id.replace('tab-', '');
-                    if (index === 0) {
-                        this.renderTableAndAccordion(category);
-                    }
+                // Initial render for the first tab
+                const firstTab = $('.tab-btn', this);
+                if (firstTab) {
+                    this.renderTableAndAccordion(firstTab.dataset.category);
+                }
+
+                // Tab switching
+                $$('.tab-btn', this).forEach(btn => {
                     btn.addEventListener('click', (e) => this.handleTabClick(e));
                 });
 
@@ -572,9 +576,7 @@
                 panel.addEventListener('click', (e) => {
                     const header = e.target.closest('.table-header-sortable');
                     if(header) {
-                        const originalCategory = header.closest('[role=tabpanel]').id.replace('panel-', '');
-                        // Convert ID back to original category name
-                        const category = $$('.tab-btn', this.parentElement.parentElement).find(btn => btn.id.replace('tab-', '') === originalCategory).textContent.trim().split(' ').slice(1).join(' ');
+                        const category = header.closest('[role=tabpanel]').dataset.category;
                         this.handleSort(category, header.dataset.sortKey);
                     }
                 });
@@ -583,16 +585,16 @@
             /** Handles switching between category tabs. */
             handleTabClick(e) {
                 const clickedTab = e.currentTarget;
+                const category = clickedTab.dataset.category;
+
                 $$('.tab-btn', this).forEach(btn => {
                     const panel = $(`#${btn.getAttribute('aria-controls')}`, this);
-                    const originalCategory = btn.textContent.trim().split(' ').slice(1).join(' ');
-
                     if (btn === clickedTab) {
                         btn.classList.add('border-sky-500', 'text-sky-600', 'dark:text-sky-500');
                         btn.classList.remove('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-300');
                         btn.setAttribute('aria-selected', 'true');
                         panel.classList.remove('hidden');
-                        this.renderTableAndAccordion(originalCategory); // Re-render content on tab click
+                        this.renderTableAndAccordion(category); // Re-render content on tab click
                     } else {
                         btn.classList.remove('border-sky-500', 'text-sky-600', 'dark:text-sky-500');
                         btn.classList.add('border-transparent', 'text-slate-500', 'hover:text-slate-700', 'dark:hover:text-slate-300');
@@ -639,8 +641,8 @@
                 // Re-render all visible categories after action
                 $$('[role=tabpanel]').forEach(panel => {
                     if(!panel.classList.contains('hidden')) {
-                        const originalCategory = $$('.tab-btn', this).find(btn => btn.getAttribute('aria-controls') === panel.id).textContent.trim().split(' ').slice(1).join(' ');
-                        this.updateUI(originalCategory);
+                        const category = panel.dataset.category;
+                        this.updateUI(category);
                     }
                 });
                 showToast(`Action '${action}' completed.`, 'success');
@@ -667,8 +669,9 @@
             }
 
             /** Filters a table based on search input. */
-            filterTable(categoryId, query) {
+            filterTable(category, query) {
                 const q = query.toLowerCase();
+                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
                 const panel = $(`#panel-${categoryId}`, this);
                 $$('tbody tr', panel).forEach(row => {
                     const text = row.textContent.toLowerCase();
@@ -678,7 +681,7 @@
             
             /** Updates the UI for a specific category (tables and progress bar). */
             updateUI(category) {
-                const categoryId = category.replace(/\s/g, '');
+                const categoryId = category.replace(/\s/g, '').replace('&', 'And');
                 const panel = $(`#panel-${categoryId}`, this);
                 if (!panel || panel.classList.contains('hidden')) return;
 
