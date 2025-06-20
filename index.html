@@ -75,8 +75,8 @@
       
       /* Styling for sortable table headers */
       .table-header-sortable:hover { @apply bg-slate-200 dark:bg-slate-700/50; }
-      .table-header-sortable svg { opacity: 0.5; transition: opacity 0.2s; }
-      .table-header-sortable[aria-sort] svg { opacity: 1; }
+      .table-header-sortable .sort-icon { opacity: 0.3; transition: opacity 0.2s; }
+      .table-header-sortable[aria-sort] .sort-icon { opacity: 1; }
       
       /* Visual feedback on check/uncheck */
       @keyframes flash-sky {
@@ -804,8 +804,6 @@
         // --- WEB COMPONENTS ---
         
         // --- BuildingPicker Web Component ---
-        // Handles the display and logic for selecting a checklist.
-        // It renders a dropdown for mobile and a sidebar list for desktop.
         class BuildingPicker extends HTMLElement {
             constructor() {
                 super();
@@ -900,18 +898,20 @@
         
         
         // --- ChecklistWorkspace Web Component ---
-        // This is the core component that manages and renders the selected checklist.
         class ChecklistWorkspace extends HTMLElement {
             constructor() {
                 super();
                 this.data = null;
                 this.checklistKey = null;
+                // Default sort state
                 this.sortState = { key: 'address', dir: 'asc' };
                 this.state = {
                     checkedDevices: new Set(),
                     checkHistory: [],
                 };
+                // Bind 'this' for event handlers
                 this.handleMenuAction = this.handleMenuAction.bind(this);
+                this.handleSortChange = this.handleSortChange.bind(this);
             }
             
             static get observedAttributes() { return ['building-key']; }
@@ -932,7 +932,8 @@
             }
             
             getUniqueDeviceId(device) {
-                return `${this.checklistKey}-${device.serialNumber}-${device.loop}-${device.address}`;
+                // Use a combination of properties to create a reliable unique ID
+                return `${this.checklistKey}-${device.serialNumber}-${device.loop}-${device.address}-${device.messages}`;
             }
 
             loadChecklist() {
@@ -982,7 +983,7 @@
                            <h2 class="text-2xl sm:text-3xl font-bold tracking-tight">${escapeHTML(this.data.name)}</h2>
                            <p class="text-slate-500 dark:text-slate-400">${escapeHTML(this.data.location)}</p>
                         </header>
-                        <div id="checklist-content" class="p-0 sm:p-6"></div>
+                        <div id="checklist-content" class="p-2 sm:p-6"></div>
                     </div>
                 `;
                 this.updateUI();
@@ -990,15 +991,36 @@
             }
 
             renderChecklistContent() {
+                const currentSortValue = `${this.sortState.key}-${this.sortState.dir}`;
+                
                 return `
-                    <div class="p-4 sm:p-0">
-                        <div id="progress-container" class="mb-4"></div>
-                        <div class="my-4">
-                            <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                    <div class="space-y-4">
+                        <div id="progress-container"></div>
+                        
+                        <!-- Search and Sort Controls -->
+                        <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-2 sm:p-0">
+                            <div class="flex-grow">
+                                <label for="search-input" class="sr-only">Search Devices</label>
+                                <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 px-3 focus-ring sm:text-sm">
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <label for="sort-select" class="text-sm font-medium text-slate-600 dark:text-slate-300">Sort by:</label>
+                                <select id="sort-select" class="w-full sm:w-auto bg-white dark:bg-slate-900 border border-slate-300 dark:border-slate-600 rounded-md shadow-sm py-2 px-3 focus-ring text-sm">
+                                    <option value="address-asc" ${currentSortValue === 'address-asc' ? 'selected' : ''}>Address (Asc)</option>
+                                    <option value="address-desc" ${currentSortValue === 'address-desc' ? 'selected' : ''}>Address (Desc)</option>
+                                    <option value="messages-asc" ${currentSortValue === 'messages-asc' ? 'selected' : ''}>Location (A-Z)</option>
+                                    <option value="messages-desc" ${currentSortValue === 'messages-desc' ? 'selected' : ''}>Location (Z-A)</option>
+                                    <option value="deviceType-asc" ${currentSortValue === 'deviceType-asc' ? 'selected' : ''}>Type (A-Z)</option>
+                                    <option value="deviceType-desc" ${currentSortValue === 'deviceType-desc' ? 'selected' : ''}>Type (Z-A)</option>
+                                    <option value="serialNumber-asc" ${currentSortValue === 'serialNumber-asc' ? 'selected' : ''}>Serial # (Asc)</option>
+                                    <option value="serialNumber-desc" ${currentSortValue === 'serialNumber-desc' ? 'selected' : ''}>Serial # (Desc)</option>
+                                </select>
+                            </div>
                         </div>
+
+                        <div id="completed-container"></div>
+                        <div id="active-container"></div>
                     </div>
-                    <div id="completed-container" class="px-4 sm:px-0"></div>
-                    <div id="active-container"></div>
                 `;
             }
 
@@ -1009,7 +1031,7 @@
                 const inspectedCount = this.state.checkedDevices.size;
                 const percent = total > 0 ? Math.round((inspectedCount / total) * 100) : 0;
                 container.innerHTML = `
-                    <div class="flex justify-between items-center mb-1 text-sm font-medium">
+                    <div class="flex justify-between items-center mb-1 text-sm font-medium px-2 sm:px-0">
                         <span class="text-slate-600 dark:text-slate-300">Progress</span>
                         <span>${inspectedCount} / ${total} inspected (${percent}%)</span>
                     </div>
@@ -1022,14 +1044,28 @@
             renderTableAndAccordion() {
                 const contentContainer = $('#checklist-content', this);
                 if (!contentContainer) return;
+                
+                // Preserve search value before re-rendering
+                const searchInput = $('#search-input', this);
+                const currentSearchQuery = searchInput ? searchInput.value : '';
+
                 contentContainer.innerHTML = this.renderChecklistContent();
                 
                 let allDevices = [...this.data.devices];
+                
                 // Sorting logic
                 allDevices.sort((a, b) => {
-                    const valA = a[this.sortState.key]?.toString() || '';
-                    const valB = b[this.sortState.key]?.toString() || '';
-                    const comparison = valA.localeCompare(valB, undefined, { numeric: true, sensitivity: 'base' });
+                    const key = this.sortState.key;
+                    // Handle numeric sorting for 'address' and 'loop'
+                    if (key === 'address' || key === 'loop') {
+                        const valA = parseInt(a[key], 10) || 0;
+                        const valB = parseInt(b[key], 10) || 0;
+                        return this.sortState.dir === 'asc' ? valA - valB : valB - valA;
+                    }
+                    // Handle string sorting for other keys
+                    const valA = a[key]?.toString().toLowerCase() || '';
+                    const valB = b[key]?.toString().toLowerCase() || '';
+                    const comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
                     return this.sortState.dir === 'asc' ? comparison : -comparison;
                 });
                 
@@ -1040,12 +1076,19 @@
                 $(`#active-container`, this).innerHTML = this.renderListHTML(activeDevices);
                 
                 this.updateProgress();
+
+                // Restore search value and re-apply filter
+                const newSearchInput = $('#search-input', this);
+                if (newSearchInput && currentSearchQuery) {
+                    newSearchInput.value = currentSearchQuery;
+                    this.filterTable(currentSearchQuery);
+                }
             }
 
             renderAccordionHTML(devices) {
                 if (devices.length === 0) return '';
                 return `
-                    <div class="mb-4 border border-slate-200 dark:border-slate-800 rounded-lg">
+                    <div class="border border-slate-200 dark:border-slate-800 rounded-lg">
                         <button aria-expanded="false" aria-controls="completed-list" class="accordion-toggle w-full flex justify-between items-center p-3 font-semibold text-sm bg-slate-100 dark:bg-slate-800/80 rounded-t-lg focus-ring">
                            <span>Completed Devices (${devices.length})</span>
                            <svg class="accordion-arrow w-5 h-5 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
@@ -1056,34 +1099,42 @@
                     </div>
                 `;
             }
+
+            getSortIcon(key) {
+                if (this.sortState.key !== key) {
+                    return `<svg class="sort-icon inline-block w-4 h-4 ml-1 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"></path></svg>`;
+                }
+                if (this.sortState.dir === 'asc') {
+                    return `<svg class="sort-icon inline-block w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M14.707 12.707a1 1 0 01-1.414 0L10 9.414l-3.293 3.293a1 1 0 01-1.414-1.414l4-4a1 1 0 011.414 0l4 4a1 1 0 010 1.414z" clip-rule="evenodd"></path></svg>`;
+                } else {
+                    return `<svg class="sort-icon inline-block w-4 h-4 ml-1" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd"></path></svg>`;
+                }
+            }
             
             renderListHTML(devices, showHeader = true) {
-                 // The main container is a table for desktop and a div for mobile
                 return `
                     <div class="overflow-x-auto">
                         <table class="w-full text-sm text-left">
                            ${showHeader ? `
                             <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800 hidden sm:table-header-group">
                                 <tr>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="loop">Loop <svg class="inline w-3 h-3">...</svg></th>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="address">Address <svg class="inline w-3 h-3">...</svg></th>
-                                    <th scope="col" class="p-3">Location/Message</th>
-                                    <th scope="col" class="p-3">Type</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="loop" ${this.sortState.key === 'loop' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Loop ${this.getSortIcon('loop')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="address" ${this.sortState.key === 'address' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Address ${this.getSortIcon('address')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="messages" ${this.sortState.key === 'messages' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Location/Message ${this.getSortIcon('messages')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="deviceType" ${this.sortState.key === 'deviceType' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Type ${this.getSortIcon('deviceType')}</th>
                                     <th scope="col" class="p-3">Model/SKU</th>
-                                    <th scope="col" class="p-3">Serial #</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="serialNumber" ${this.sortState.key === 'serialNumber' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Serial # ${this.getSortIcon('serialNumber')}</th>
                                     <th scope="col" class="p-3 text-center">✅</th>
                                 </tr>
                             </thead>` : ''}
                             <tbody class="divide-y divide-slate-200 dark:divide-slate-800">
-                               ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr class="device-row"><td colspan="7" class="sm:table-cell p-4 text-center text-slate-500">No devices to show.</td></tr>`}
+                               ${devices.map(d => this.renderRowHTML(d)).join('') || `<tr class="device-row"><td colspan="7" class="p-4 text-center text-slate-500">No devices to show.</td></tr>`}
                             </tbody>
                         </table>
                     </div>
                 `;
             }
             
-            // --- THIS IS THE KEY FUNCTION THAT WAS REBUILT ---
-            // It now creates a rich, detailed card for mobile that shows all info at once.
             renderRowHTML(device) {
                 const uniqueId = this.getUniqueDeviceId(device);
                 const isInspected = this.state.checkedDevices.has(uniqueId);
@@ -1091,12 +1142,11 @@
                 return `
                     <tr data-device-id="${uniqueId}" class="device-row block sm:table-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20 opacity-70' : ''}">
                         
-                        <!-- Mobile Card View (Rebuilt for app-like feel) -->
+                        <!-- Mobile Card View -->
                         <td class="sm:hidden w-full p-3">
                             <div class="flex items-center justify-between gap-3 w-full">
                                 <div class="flex-grow space-y-3">
                                     <div class="flex items-start gap-3">
-                                        <!-- Loop/Address Block -->
                                         <div class="flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-md p-2 text-center w-20">
                                             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loop</p>
                                             <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.loop) || 'N/A'}</p>
@@ -1104,38 +1154,29 @@
                                             <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Address</p>
                                             <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.address) || 'N/A'}</p>
                                         </div>
-                                        
-                                        <!-- Description/Type Block -->
                                         <div class="flex-grow pt-1">
                                             <p class="font-semibold text-slate-800 dark:text-slate-100 leading-tight">${escapeHTML(device.messages)}</p>
                                             <p class="text-sm text-slate-600 dark:text-slate-400">${escapeHTML(device.deviceType)}</p>
                                         </div>
                                     </div>
-
-                                    <!-- All Details Block (No longer hidden) -->
                                     <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 pl-1">
                                         <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Serial #:</dt>
                                         <dd class="truncate col-span-1">${escapeHTML(device.serialNumber) || 'N/A'}</dd>
-                                        
                                         <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Model/SKU:</dt>
                                         <dd class="truncate col-span-1">${escapeHTML(device.model) || 'N/A'}</dd>
-                                        
                                         <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Sys. Address:</dt>
                                         <dd class="col-span-1">${escapeHTML(device.systemAddress) || 'N/A'}</dd>
-                                        
                                         <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Type ID:</dt>
                                         <dd class="col-span-1">${escapeHTML(device.deviceTypeID) || 'N/A'}</dd>
                                     </dl>
                                 </div>
-                                
-                                <!-- Checkbox -->
                                 <div class="flex-shrink-0">
                                     <input type="checkbox" data-device-id="${uniqueId}" class="h-8 w-8 rounded-md border-slate-400 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
                                 </div>
                             </div>
                         </td>
 
-                        <!-- Desktop Table Cells (Unchanged) -->
+                        <!-- Desktop Table Cells -->
                         <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.loop)}</td>
                         <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.address)}</td>
                         <td class="hidden sm:table-cell p-3 max-w-sm truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
@@ -1150,9 +1191,11 @@
             }
 
             attachEventListeners() {
+                // Main event listener for clicks
                 this.addEventListener('click', (e) => {
                     const row = e.target.closest('.device-row');
                     const accordionToggle = e.target.closest('.accordion-toggle');
+                    const sortHeader = e.target.closest('.table-header-sortable');
 
                     if (accordionToggle) {
                         const content = this.querySelector(`#${accordionToggle.getAttribute('aria-controls')}`);
@@ -1162,17 +1205,46 @@
                         return;
                     }
                     
-                    if (row) return this.handleRowClick(row);
+                    if(sortHeader) {
+                        this.handleSortClick(sortHeader);
+                        return;
+                    }
+                    
+                    if (row) {
+                        this.handleRowClick(row);
+                        return;
+                    }
                 });
                 
+                // Listener for search input
                 this.addEventListener('input', debounce((e) => {
                     if (e.target.id === 'search-input') this.filterTable(e.target.value);
                 }, 250));
+
+                // Listener for sort dropdown
+                this.addEventListener('change', this.handleSortChange);
             }
 
             handleMenuAction(event) {
                 const { action } = event.detail;
                 this.handleGlobalAction(action);
+            }
+            
+            handleSortClick(header) {
+                const newKey = header.dataset.sortKey;
+                let newDir = 'asc';
+                if (this.sortState.key === newKey && this.sortState.dir === 'asc') {
+                    newDir = 'desc';
+                }
+                this.sortState = { key: newKey, dir: newDir };
+                this.updateUI();
+            }
+
+            handleSortChange(event) {
+                if (event.target.id !== 'sort-select') return;
+                const [key, dir] = event.target.value.split('-');
+                this.sortState = { key, dir };
+                this.updateUI();
             }
 
             handleRowClick(row) {
@@ -1187,7 +1259,7 @@
                     this.state.checkHistory.push(deviceId);
                 } else {
                     this.state.checkedDevices.delete(deviceId);
-                    const historyIndex = this.state.checkHistory.indexOf(deviceId);
+                    const historyIndex = this.state.checkHistory.lastIndexOf(deviceId);
                     if (historyIndex > -1) this.state.checkHistory.splice(historyIndex, 1);
                 }
                 
@@ -1195,7 +1267,7 @@
                 row.addEventListener('animationend', () => row.classList.remove('flash-bg'), { once: true });
 
                 this.saveInspectedState();
-                this.updateUI();
+                this.updateUI(); // This re-renders, preserving search
                 this.updateLastCheckedFooter();
             }
 
@@ -1256,15 +1328,20 @@
                 a.href = url;
                 a.download = `${this.checklistKey}-inspected-${new Date().toISOString().slice(0,10)}.json`;
                 document.body.appendChild(a);
-a.click();
+                a.click();
                 document.body.removeChild(a);
                 URL.revokeObjectURL(url);
                 showToast('Exported inspected list as JSON.', 'success');
             }
             
             filterTable(query) {
-                const q = query.toLowerCase();
+                const q = query.toLowerCase().trim();
                 $$('.device-row', this).forEach(row => {
+                    if (!q) {
+                        // Reset display if query is empty
+                         row.style.display = window.innerWidth >= 640 ? 'table-row' : 'block';
+                        return;
+                    }
                     const textContent = row.textContent.toLowerCase();
                     const shouldShow = textContent.includes(q);
                     
