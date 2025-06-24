@@ -154,15 +154,13 @@
         </main>
         
         <!-- Last Checked Footer -->
-        <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800 sticky-footer z-30 hidden">
-            <div class="max-w-screen-2xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
-                <!-- Left side: Device Counter -->
-                <div id="footer-device-counter-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">
+       <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800 sticky-footer z-30 hidden">
+            <div class="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 lg:px-8 gap-1 sm:gap-4">
+                <div id="footer-device-counter-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap w-full sm:w-auto text-left">
                     Devices on screen: <span id="footer-device-count" class="font-bold text-slate-800 dark:text-slate-100">0</span>
                 </div>
 
-                <!-- Right side: Last Checked -->
-                <p id="last-checked-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate text-right flex-grow invisible">
+                <p id="last-checked-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate text-left sm:text-right w-full sm:w-auto flex-grow invisible">
                     Last Checked: <span id="last-checked-text" class="font-bold text-sky-600 dark:text-sky-500"></span>
                 </p>
             </div>
