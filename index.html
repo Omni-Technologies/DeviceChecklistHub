@@ -155,8 +155,14 @@
         
         <!-- Last Checked Footer -->
         <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800 sticky-footer z-30 hidden">
-            <div class="max-w-screen-2xl mx-auto text-center px-4 sm:px-6 lg:px-8">
-                <p class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate">
+            <div class="max-w-screen-2xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
+                <!-- Left side: Device Counter -->
+                <div id="footer-device-counter-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">
+                    Devices on screen: <span id="footer-device-count" class="font-bold text-slate-800 dark:text-slate-100">0</span>
+                </div>
+
+                <!-- Right side: Last Checked -->
+                <p id="last-checked-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate text-right flex-grow invisible">
                     Last Checked: <span id="last-checked-text" class="font-bold text-sky-600 dark:text-sky-500"></span>
                 </p>
             </div>
@@ -825,7 +831,6 @@
                                    <svg class="h-5 w-5 text-slate-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M9 3.5a5.5 5.5 0 100 11 5.5 5.5 0 000-11zM2 9a7 7 0 1112.452 4.391l3.328 3.329a.75.75 0 11-1.06 1.06l-3.329-3.328A7 7 0 012 9z" clip-rule="evenodd" /></svg>
                                 </div>
                                 <input type="search" id="search-input" placeholder="Search all devices..." class="block w-full bg-slate-100 dark:bg-slate-800 border-slate-300 dark:border-slate-700 rounded-md shadow-sm py-2 pl-10 pr-4 focus-ring sm:text-sm">
-                                <div id="device-counter" class="absolute inset-y-0 right-0 flex items-center pr-3 text-sm font-medium text-slate-500 dark:text-slate-400 pointer-events-none"></div>
                             </div>
                             <div class="flex items-center gap-2">
                                 <label for="sort-select" class="text-sm font-medium text-slate-600 dark:text-slate-300">Sort by:</label>
@@ -1028,6 +1033,7 @@
                         const isExpanded = accordionToggle.getAttribute('aria-expanded') === 'true';
                         accordionToggle.setAttribute('aria-expanded', String(!isExpanded));
                         if(content) content.classList.toggle('hidden');
+                        this.updateDeviceCounter(); // Update count on accordion toggle
                         return;
                     }
                     
@@ -1181,21 +1187,19 @@
             }
 
             updateDeviceCounter() {
-                const counterElement = $('#device-counter', this);
+                const counterElement = $('#footer-device-count');
                 if (!counterElement) return;
 
-                const visibleRows = Array.from($$('.device-row', this)).filter(row => row.style.display !== 'none');
-                const count = visibleRows.length;
-                
-                const searchInput = $('#search-input', this);
-                const query = searchInput ? searchInput.value.trim() : '';
+                const visibleRows = Array.from($$('.device-row', this)).filter(row => {
+                    const rowIsHiddenBySearch = row.style.display === 'none';
+                    
+                    const completedList = row.closest('#completed-list');
+                    const accordionIsCollapsed = completedList && completedList.classList.contains('hidden');
+                    
+                    return !rowIsHiddenBySearch && !accordionIsCollapsed;
+                });
 
-                if (query) {
-                    counterElement.textContent = `${count} found`;
-                } else {
-                    const activeDevices = this.data.devices.filter(d => !this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
-                    counterElement.textContent = `${activeDevices.length} devices`;
-                }
+                counterElement.textContent = visibleRows.length;
             }
             
             updateUI() {
@@ -1204,17 +1208,25 @@
             
             updateLastCheckedFooter() {
                 const footer = $('#last-checked-footer');
-                const footerText = $('#last-checked-text');
+                const lastCheckedContainer = $('#last-checked-container');
+                const lastCheckedText = $('#last-checked-text');
+                if (!footer || !lastCheckedContainer || !lastCheckedText) return;
+
+                // Make the entire footer bar visible as soon as a checklist is active
+                if (this.data) {
+                    footer.classList.remove('hidden');
+                }
+
                 if (this.state.checkHistory.length > 0) {
                     const lastCheckedId = this.state.checkHistory[this.state.checkHistory.length - 1];
                     const device = this.data.devices.find(d => this.getUniqueDeviceId(d) === lastCheckedId);
-                    if (device && footerText) {
+                    if (device) {
                         const idText = device.systemAddress ? device.systemAddress : (device.loop !== 'N/A' ? `L${device.loop}/A${device.address}` : `${device.deviceType} ${device.address}`);
-                        footerText.textContent = ` ${idText}: ${device.messages}`;
-                        footer.classList.remove('hidden');
+                        lastCheckedText.textContent = ` ${idText}: ${device.messages}`;
+                        lastCheckedContainer.classList.remove('invisible');
                     }
                 } else {
-                    if (footer) footer.classList.add('hidden');
+                    lastCheckedContainer.classList.add('invisible');
                 }
             }
         }
