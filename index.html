@@ -97,6 +97,19 @@
       .dark .sticky-footer {
           background-color: rgba(15, 23, 42, 0.85); /* dark mode bg */
       }
+
+      /* Styles for landscape mobile view */
+      @media (max-width: 640px) and (orientation: landscape) {
+        #active-list-container, #completed-list-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 0.5rem;
+        }
+        .device-row-mobile {
+            border: 1px solid;
+            @apply border-slate-200 dark:border-slate-800 rounded-lg;
+        }
+      }
     </style>
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
@@ -143,7 +156,7 @@
                 <div id="checklist-workspace" class="flex-grow">
                      <div id="welcome-message" class="text-center py-20 px-4">
                         <h2 class="text-2xl font-semibold text-slate-600 dark:text-slate-400">Welcome, Inspector!</h2>
-                        <p class="mt-2 text-slate-500">Please select a checklist from the list above to begin your inspection.</p>
+                        <p class="mt-2 text-slate-500">Please select a checklist from the list to begin your inspection.</p>
                     </div>
                 </div>
 
@@ -154,13 +167,15 @@
         </main>
         
         <!-- Last Checked Footer -->
-       <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800 sticky-footer z-30 hidden">
-            <div class="max-w-screen-2xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between px-4 sm:px-6 lg:px-8 gap-1 sm:gap-4">
-                <div id="footer-device-counter-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap w-full sm:w-auto text-left">
+        <footer id="last-checked-footer" class="fixed bottom-0 left-0 right-0 p-3 border-t border-slate-200 dark:border-slate-800 sticky-footer z-30 hidden">
+            <div class="max-w-screen-2xl mx-auto flex items-center justify-between px-4 sm:px-6 lg:px-8 gap-4">
+                <!-- Left side: Device Counter -->
+                <div id="footer-device-counter-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium whitespace-nowrap">
                     Devices on screen: <span id="footer-device-count" class="font-bold text-slate-800 dark:text-slate-100">0</span>
                 </div>
 
-                <p id="last-checked-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium text-left sm:text-right w-full sm:w-auto flex-grow invisible">
+                <!-- Right side: Last Checked -->
+                <p id="last-checked-container" class="text-sm text-slate-600 dark:text-slate-300 font-medium truncate text-right flex-grow invisible">
                     Last Checked: <span id="last-checked-text" class="font-bold text-sky-600 dark:text-sky-500"></span>
                 </p>
             </div>
@@ -1330,25 +1345,26 @@
                 super();
                 this.data = null;
                 this.checklistKey = null;
-                // Default sort state
                 this.sortState = { key: 'address', dir: 'asc' };
                 this.state = {
                     checkedDevices: new Set(),
                     checkHistory: [],
                 };
-                // Bind 'this' for event handlers
                 this.handleMenuAction = this.handleMenuAction.bind(this);
                 this.handleSortChange = this.handleSortChange.bind(this);
+                this.handleResize = debounce(this.handleResize.bind(this), 200);
             }
             
             static get observedAttributes() { return ['building-key']; }
 
             connectedCallback() {
                 document.addEventListener('request-workspace-action', this.handleMenuAction);
+                window.addEventListener('resize', this.handleResize);
             }
 
             disconnectedCallback() {
                 document.removeEventListener('request-workspace-action', this.handleMenuAction);
+                window.removeEventListener('resize', this.handleResize);
             }
 
             attributeChangedCallback(name, oldValue, newValue) {
@@ -1357,9 +1373,13 @@
                     this.loadChecklist();
                 }
             }
+
+            handleResize() {
+                // Re-render to apply landscape/portrait styles
+                this.updateUI();
+            }
             
             getUniqueDeviceId(device) {
-                // Use a combination of properties to create a reliable unique ID
                 return `${this.checklistKey}-${device.serialNumber}-${device.loop}-${device.address}-${device.messages}`;
             }
 
@@ -1424,7 +1444,6 @@
                     <div class="space-y-4">
                         <div id="progress-container"></div>
                         
-                        <!-- Search and Sort Controls -->
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-2 sm:p-0">
                             <div class="relative flex-grow">
                                 <label for="search-input" class="sr-only">Search Devices</label>
@@ -1475,7 +1494,6 @@
                 const contentContainer = $('#checklist-content', this);
                 if (!contentContainer) return;
                 
-                // Preserve search value before re-rendering
                 const searchInput = $('#search-input', this);
                 const currentSearchQuery = searchInput ? searchInput.value : '';
 
@@ -1483,16 +1501,13 @@
                 
                 let allDevices = [...this.data.devices];
                 
-                // Sorting logic
                 allDevices.sort((a, b) => {
                     const key = this.sortState.key;
-                    // Handle numeric sorting for 'address' and 'loop'
                     if (key === 'address' || key === 'loop') {
                         const valA = parseInt(a[key], 10) || 0;
                         const valB = parseInt(b[key], 10) || 0;
                         return this.sortState.dir === 'asc' ? valA - valB : valB - valA;
                     }
-                    // Handle string sorting for other keys
                     const valA = a[key]?.toString().toLowerCase() || '';
                     const valB = b[key]?.toString().toLowerCase() || '';
                     const comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
@@ -1507,13 +1522,12 @@
                 
                 this.updateProgress();
 
-                // Restore search value and re-apply filter
                 const newSearchInput = $('#search-input', this);
                 if (newSearchInput && currentSearchQuery) {
                     newSearchInput.value = currentSearchQuery;
                     this.filterTable(currentSearchQuery);
                 } else {
-                     this.updateDeviceCounter(); // Update for initial view
+                     this.updateDeviceCounter();
                 }
             }
 
@@ -1526,7 +1540,12 @@
                            <svg class="accordion-arrow w-5 h-5 transition-transform" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
                         </button>
                         <div id="completed-list" class="hidden">
-                            ${this.renderListHTML(devices, false)}
+                             <div id="completed-list-container">
+                                ${devices.map(d => this.renderRowHTML(d)).join('') || `<div class="p-4 text-center text-slate-500 col-span-full">No completed devices.</div>`}
+                            </div>
+                            <table class="w-full text-sm text-left hidden">
+                                <tbody class="divide-y divide-slate-200 dark:divide-slate-800"></tbody>
+                            </table>
                         </div>
                     </div>
                 `;
@@ -1544,11 +1563,14 @@
             }
             
             renderListHTML(devices, showHeader = true) {
-                return `
-                    <div class="overflow-x-auto">
+                 return `
+                    <div id="active-list-container" class="sm:hidden space-y-2">
+                        ${devices.map(d => this.renderRowHTML(d)).join('') || `<div class="device-row p-4 text-center text-slate-500">No active devices.</div>`}
+                    </div>
+                    <div class="hidden sm:block overflow-x-auto">
                         <table class="w-full text-sm text-left">
                            ${showHeader ? `
-                            <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800 hidden sm:table-header-group">
+                            <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800">
                                 <tr>
                                     <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="loop" ${this.sortState.key === 'loop' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Loop ${this.getSortIcon('loop')}</th>
                                     <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="address" ${this.sortState.key === 'address' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Address ${this.getSortIcon('address')}</th>
@@ -1570,52 +1592,48 @@
             renderRowHTML(device) {
                 const uniqueId = this.getUniqueDeviceId(device);
                 const isInspected = this.state.checkedDevices.has(uniqueId);
-                
-                return `
-                    <tr data-device-id="${uniqueId}" class="device-row block sm:table-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20 opacity-70' : ''}">
-                        
-                        <!-- Mobile Card View -->
-                        <td class="sm:hidden w-full p-3">
-                            <div class="flex items-center justify-between gap-3 w-full">
-                                <div class="flex-grow space-y-3">
-                                    <div class="flex items-start gap-3">
-                                        <div class="flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-md p-2 text-center w-20">
-                                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loop</p>
-                                            <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.loop) || 'N/A'}</p>
-                                            <hr class="border-slate-300 dark:border-slate-600 my-1">
-                                            <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Address</p>
-                                            <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.address) || 'N/A'}</p>
-                                        </div>
-                                        <div class="flex-grow pt-1">
-                                            <p class="font-semibold text-slate-800 dark:text-slate-100 leading-tight">${escapeHTML(device.messages)}</p>
-                                            <p class="text-sm text-slate-600 dark:text-slate-400">${escapeHTML(device.deviceType)}</p>
-                                        </div>
-                                    </div>
-                                    <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 pl-1">
-                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Serial #:</dt>
-                                        <dd class="truncate col-span-1">${escapeHTML(device.serialNumber) || 'N/A'}</dd>
-                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Model/SKU:</dt>
-                                        <dd class="truncate col-span-1">${escapeHTML(device.model) || 'N/A'}</dd>
-                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Sys. Address:</dt>
-                                        <dd class="col-span-1">${escapeHTML(device.systemAddress) || 'N/A'}</dd>
-                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Type ID:</dt>
-                                        <dd class="col-span-1">${escapeHTML(device.deviceTypeID) || 'N/A'}</dd>
-                                    </dl>
-                                </div>
-                                <div class="flex-shrink-0">
-                                    <input type="checkbox" data-device-id="${uniqueId}" class="h-8 w-8 rounded-md border-slate-400 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
-                                </div>
-                            </div>
-                        </td>
+                const baseClasses = `device-row ${isInspected ? 'bg-slate-100/50 dark:bg-slate-800/20 opacity-70' : ''}`;
 
-                        <!-- Desktop Table Cells -->
-                        <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.loop)}</td>
-                        <td class="hidden sm:table-cell p-3 font-medium whitespace-nowrap">${escapeHTML(device.address)}</td>
-                        <td class="hidden sm:table-cell p-3 max-w-sm truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
-                        <td class="hidden sm:table-cell p-3 max-w-xs truncate" title="${escapeHTML(device.deviceType)}">${escapeHTML(device.deviceType)}</td>
-                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.model)}</td>
-                        <td class="hidden sm:table-cell p-3 whitespace-nowrap">${escapeHTML(device.serialNumber)}</td>
-                        <td class="hidden sm:table-cell p-3 text-center">
+                return `
+                    <!-- Mobile Card View -->
+                    <div data-device-id="${uniqueId}" class="device-row-mobile sm:hidden p-3 ${baseClasses}">
+                        <div class="flex items-center justify-between gap-3 w-full">
+                            <div class="flex-grow space-y-3">
+                                <div class="flex items-start gap-3">
+                                    <div class="flex-shrink-0 bg-slate-100 dark:bg-slate-800 rounded-md p-2 text-center w-20">
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Loop</p>
+                                        <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.loop) || 'N/A'}</p>
+                                        <hr class="border-slate-300 dark:border-slate-600 my-1">
+                                        <p class="text-xs text-slate-500 dark:text-slate-400 font-medium">Address</p>
+                                        <p class="font-black text-xl text-slate-800 dark:text-slate-200">${escapeHTML(device.address) || 'N/A'}</p>
+                                    </div>
+                                    <div class="flex-grow pt-1 min-w-0">
+                                        <p class="font-semibold text-slate-800 dark:text-slate-100 leading-tight">${escapeHTML(device.messages)}</p>
+                                        <p class="text-sm text-slate-600 dark:text-slate-400 truncate">${escapeHTML(device.deviceType)}</p>
+                                    </div>
+                                </div>
+                                <dl class="grid grid-cols-2 gap-x-4 gap-y-1 text-xs text-slate-500 dark:text-slate-400 pl-1">
+                                    <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Serial #:</dt>
+                                    <dd class="truncate col-span-1">${escapeHTML(device.serialNumber) || 'N/A'}</dd>
+                                    <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Model/SKU:</dt>
+                                    <dd class="truncate col-span-1">${escapeHTML(device.model) || 'N/A'}</dd>
+                                </dl>
+                            </div>
+                            <div class="flex-shrink-0 pl-2 mobile-checkbox-area cursor-pointer">
+                                <input type="checkbox" data-device-id="${uniqueId}" class="h-8 w-8 rounded-md border-slate-400 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Desktop Table Row -->
+                    <tr data-device-id="${uniqueId}" class="hidden sm:table-row desktop-row cursor-pointer hover:bg-slate-50 dark:hover:bg-slate-800/50 ${baseClasses}">
+                        <td class="p-3 font-medium whitespace-nowrap">${escapeHTML(device.loop)}</td>
+                        <td class="p-3 font-medium whitespace-nowrap">${escapeHTML(device.address)}</td>
+                        <td class="p-3 max-w-sm truncate" title="${escapeHTML(device.messages)}">${escapeHTML(device.messages)}</td>
+                        <td class="p-3 max-w-xs truncate" title="${escapeHTML(device.deviceType)}">${escapeHTML(device.deviceType)}</td>
+                        <td class="p-3 whitespace-nowrap">${escapeHTML(device.model)}</td>
+                        <td class="p-3 whitespace-nowrap">${escapeHTML(device.serialNumber)}</td>
+                        <td class="p-3 text-center">
                             <input type="checkbox" data-device-id="${uniqueId}" class="h-5 w-5 rounded border-slate-300 text-sky-600 focus-ring pointer-events-none" ${isInspected ? 'checked' : ''} tabindex="-1">
                         </td>
                     </tr>
@@ -1623,40 +1641,57 @@
             }
 
             attachEventListeners() {
-                // Main event listener for clicks
                 this.addEventListener('click', (e) => {
-                    const row = e.target.closest('.device-row');
                     const accordionToggle = e.target.closest('.accordion-toggle');
                     const sortHeader = e.target.closest('.table-header-sortable');
-
+                    const desktopRow = e.target.closest('.desktop-row');
+                    const mobileCheckboxArea = e.target.closest('.mobile-checkbox-area');
+                    
                     if (accordionToggle) {
-                        const content = this.querySelector(`#${accordionToggle.getAttribute('aria-controls')}`);
-                        const isExpanded = accordionToggle.getAttribute('aria-expanded') === 'true';
-                        accordionToggle.setAttribute('aria-expanded', String(!isExpanded));
-                        if(content) content.classList.toggle('hidden');
-                        this.updateDeviceCounter(); // Update count on accordion toggle
+                        this.toggleAccordion(accordionToggle);
                         return;
                     }
-                    
                     if(sortHeader) {
                         this.handleSortClick(sortHeader);
                         return;
                     }
-                    
-                    if (row) {
-                        this.handleRowClick(row);
+                    if (desktopRow) {
+                        this.handleRowClick(desktopRow.dataset.deviceId);
+                        return;
+                    }
+                    if (mobileCheckboxArea) {
+                        const row = mobileCheckboxArea.closest('.device-row-mobile');
+                        this.handleRowClick(row.dataset.deviceId);
                         return;
                     }
                 });
                 
-                // Listener for search input
                 this.addEventListener('input', debounce((e) => {
                     if (e.target.id === 'search-input') this.filterTable(e.target.value);
                 }, 250));
 
-                // Listener for sort dropdown
                 this.addEventListener('change', this.handleSortChange);
             }
+
+            toggleAccordion(button) {
+                 const content = this.querySelector(`#${button.getAttribute('aria-controls')}`);
+                const isExpanded = button.getAttribute('aria-expanded') === 'true';
+                button.setAttribute('aria-expanded', String(!isExpanded));
+                if(content) content.classList.toggle('hidden');
+                
+                // This is a fix for re-populating the completed list when it's opened in landscape
+                 if(!isExpanded) {
+                    const inspectedDevices = [...this.data.devices]
+                        .filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
+                    const container = content.querySelector('#completed-list-container');
+                    if(container) {
+                         container.innerHTML = inspectedDevices.map(d => this.renderRowHTML(d)).join('') || `<div class="p-4 text-center text-slate-500 col-span-full">No completed devices.</div>`;
+                    }
+                 }
+                
+                this.updateDeviceCounter();
+            }
+
 
             handleMenuAction(event) {
                 const { action } = event.detail;
@@ -1680,14 +1715,13 @@
                 this.updateUI();
             }
 
-            handleRowClick(row) {
-                const { deviceId } = row.dataset;
-                const checkboxes = row.querySelectorAll(`input[data-device-id="${deviceId}"]`);
-                if (checkboxes.length === 0) return;
+            handleRowClick(deviceId) {
+                const row = this.querySelector(`[data-device-id="${deviceId}"]`);
+                if (!row) return;
 
-                const isInspected = !checkboxes[0].checked;
+                const isInspected = this.state.checkedDevices.has(deviceId);
                 
-                if (isInspected) {
+                if (!isInspected) {
                     this.state.checkedDevices.add(deviceId);
                     this.state.checkHistory.push(deviceId);
                 } else {
@@ -1700,7 +1734,7 @@
                 row.addEventListener('animationend', () => row.classList.remove('flash-bg'), { once: true });
 
                 this.saveInspectedState();
-                this.updateUI(); // This re-renders, preserving search
+                this.updateUI();
                 this.updateLastCheckedFooter();
             }
 
@@ -1769,20 +1803,10 @@
             
             filterTable(query) {
                 const q = query.toLowerCase().trim();
-                $$('.device-row', this).forEach(row => {
-                    if (!q) {
-                        // Reset display if query is empty
-                         row.style.display = window.innerWidth >= 640 ? 'table-row' : 'block';
-                        return;
-                    }
+                $$('.device-row-mobile, .desktop-row', this).forEach(row => {
                     const textContent = row.textContent.toLowerCase();
                     const shouldShow = textContent.includes(q);
-                    
-                    if (window.innerWidth >= 640) { // Desktop
-                        row.style.display = shouldShow ? 'table-row' : 'none';
-                    } else { // Mobile
-                         row.style.display = shouldShow ? 'block' : 'none';
-                    }
+                    row.style.display = shouldShow ? '' : 'none';
                 });
                 this.updateDeviceCounter();
             }
@@ -1791,7 +1815,7 @@
                 const counterElement = $('#footer-device-count');
                 if (!counterElement) return;
 
-                const visibleRows = Array.from($$('.device-row', this)).filter(row => {
+                const visibleRows = Array.from($$('.device-row-mobile, .desktop-row', this)).filter(row => {
                     const rowIsHiddenBySearch = row.style.display === 'none';
                     
                     const completedList = row.closest('#completed-list');
@@ -1813,7 +1837,6 @@
                 const lastCheckedText = $('#last-checked-text');
                 if (!footer || !lastCheckedContainer || !lastCheckedText) return;
 
-                // Make the entire footer bar visible as soon as a checklist is active
                 if (this.data) {
                     footer.classList.remove('hidden');
                 }
@@ -1835,13 +1858,11 @@
 
         // --- APP INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Setup Building Pickers
             const mobilePickerContainer = $('#mobile-building-picker-container');
             const desktopPickerContainer = $('#desktop-building-picker-container');
             if (mobilePickerContainer) mobilePickerContainer.appendChild(document.createElement('building-picker'));
             if (desktopPickerContainer) desktopPickerContainer.appendChild(document.createElement('building-picker'));
             
-            // Handle Checklist Selection
             document.addEventListener('checklist-selected', (e) => {
                 const { key } = e.detail;
                 const workspaceContainer = $('#checklist-workspace');
@@ -1858,12 +1879,10 @@
                 $('#menu-toggle-button').disabled = false;
             });
 
-            // --- HEADER MENU LOGIC ---
             const menuContainer = $('#header-menu-container');
             const menuButton = $('#menu-toggle-button');
             const menuDropdown = $('#menu-dropdown');
             
-            // Initially hide menu until a checklist is loaded
             menuContainer.classList.add('invisible', 'opacity-50');
             menuButton.disabled = true;
 
