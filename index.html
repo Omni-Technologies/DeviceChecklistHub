@@ -1485,18 +1485,31 @@
                 
                 // Sorting logic
                 allDevices.sort((a, b) => {
+                    const dir = this.sortState.dir === 'asc' ? 1 : -1;
                     const key = this.sortState.key;
-                    // Handle numeric sorting for 'address' and 'loop'
-                    if (key === 'address' || key === 'loop') {
-                        const valA = parseInt(a[key], 10) || 0;
-                        const valB = parseInt(b[key], 10) || 0;
-                        return this.sortState.dir === 'asc' ? valA - valB : valB - valA;
+
+                    // Primary sort: by loop. Treats 'N/A' as a very large number to sort it after numbered loops.
+                    const loopA = isNaN(parseInt(a.loop)) ? Infinity : parseInt(a.loop);
+                    const loopB = isNaN(parseInt(b.loop)) ? Infinity : parseInt(b.loop);
+
+                    if (loopA !== loopB) {
+                        return (loopA - loopB) * dir;
                     }
-                    // Handle string sorting for other keys
-                    const valA = a[key]?.toString().toLowerCase() || '';
-                    const valB = b[key]?.toString().toLowerCase() || '';
-                    const comparison = valA.localeCompare(valB, undefined, { sensitivity: 'base' });
-                    return this.sortState.dir === 'asc' ? comparison : -comparison;
+
+                    // Secondary sort: by the selected key (address, messages, etc.)
+                    const valA = a[key];
+                    const valB = b[key];
+
+                    // Handle numeric vs. string comparison for the secondary key
+                    if (key === 'address' || key === 'serialNumber') {
+                        const numA = parseInt(valA, 10) || 0;
+                        const numB = parseInt(valB, 10) || 0;
+                        return (numA - numB) * dir;
+                    } else {
+                        const strA = String(valA || '').toLowerCase();
+                        const strB = String(valB || '').toLowerCase();
+                        return strA.localeCompare(strB, undefined, { sensitivity: 'base' }) * dir;
+                    }
                 });
                 
                 const inspectedDevices = allDevices.filter(d => this.state.checkedDevices.has(this.getUniqueDeviceId(d)));
