@@ -101,6 +101,9 @@
 </head>
 <body class="bg-slate-100 dark:bg-slate-950 text-slate-800 dark:text-slate-200">
 
+    <!-- Hidden file input for the import functionality -->
+    <input type="file" id="import-file-input" class="hidden" accept=".json">
+
     <div id="app-container" class="relative min-h-screen">
         
         <!-- Header -->
@@ -124,6 +127,8 @@
                         <div id="menu-dropdown" class="hidden absolute right-0 mt-2 w-56 origin-top-right rounded-md bg-white dark:bg-slate-800 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none" role="menu" aria-orientation="vertical" aria-labelledby="menu-toggle-button" tabindex="-1">
                             <div class="py-1" role="none">
                                 <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-undo" data-menu-action="undo">Undo Last Check</a>
+                                <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
+                                <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-import" data-menu-action="import">Import List...</a>
                                 <a href="#" class="text-slate-700 dark:text-slate-200 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-export" data-menu-action="export">Export Inspected List</a>
                                 <div class="border-t border-slate-200 dark:border-slate-700 my-1"></div>
                                 <a href="#" class="text-red-600 dark:text-red-400 block px-4 py-2 text-sm hover:bg-slate-100 dark:hover:bg-slate-700" role="menuitem" tabindex="-1" id="menu-clear" data-menu-action="clear-all">Clear All Checkmarks...</a>
@@ -143,7 +148,7 @@
                 <div id="checklist-workspace" class="flex-grow">
                      <div id="welcome-message" class="text-center py-20 px-4">
                         <h2 class="text-2xl font-semibold text-slate-600 dark:text-slate-400">Welcome, Inspector!</h2>
-                        <p class="mt-2 text-slate-500">Please select a checklist from the list above to begin your inspection.</p>
+                        <p class="mt-2 text-slate-500">Please select a checklist from the list to begin your inspection.</p>
                     </div>
                 </div>
 
@@ -200,7 +205,7 @@
         // All original data is preserved here.
         // ===================================================================================
         const CHECKLISTS = [
-          {
+           {
             key: "mcfarland_psc",
             name: "McFarland Public Safety Center",
             location: "Fire Alarm Device Inspection",
@@ -1557,6 +1562,7 @@
          * Normalizes device data from different sources into a consistent format.
          */
         function normalizeDevice(device) {
+            // This function handles different potential structures for a device object.
             const isExcelFormat = device.hasOwnProperty('System Address ( Node : Card : Device )');
             if (isExcelFormat) {
                 const systemAddress = device['System Address ( Node : Card : Device )'] || 'N/A:N/A:N/A';
@@ -1572,13 +1578,14 @@
                     messages: (device['Location Text'] || '').replace(/\n/g, ' '),
                 };
             } else {
+                // This handles the original hardcoded format and the exported JSON format.
                 return {
                     loop: device.loop || '',
                     address: device.address || '',
-                    systemAddress: '',
+                    systemAddress: device.systemAddress || '',
                     model: device.model || '',
                     deviceType: device.deviceType || '',
-                    deviceTypeID: '',
+                    deviceTypeID: device.deviceTypeID || '',
                     serialNumber: device.serialNumber || '',
                     messages: device.messages || '',
                 };
@@ -1751,25 +1758,33 @@
                 super();
                 this.data = null;
                 this.checklistKey = null;
-                // Default sort state
                 this.sortState = { key: 'address', dir: 'asc' };
                 this.state = {
                     checkedDevices: new Set(),
                     checkHistory: [],
                 };
-                // Bind 'this' for event handlers
+                // Bind 'this' for event handlers that are added/removed
                 this.handleMenuAction = this.handleMenuAction.bind(this);
                 this.handleSortChange = this.handleSortChange.bind(this);
+                this.handleFileImport = this.handleFileImport.bind(this);
             }
             
             static get observedAttributes() { return ['building-key']; }
 
             connectedCallback() {
                 document.addEventListener('request-workspace-action', this.handleMenuAction);
+                // Listen for file import
+                this.fileInput = $('#import-file-input');
+                if (this.fileInput) {
+                    this.fileInput.addEventListener('change', this.handleFileImport);
+                }
             }
 
             disconnectedCallback() {
                 document.removeEventListener('request-workspace-action', this.handleMenuAction);
+                 if (this.fileInput) {
+                    this.fileInput.removeEventListener('change', this.handleFileImport);
+                }
             }
 
             attributeChangedCallback(name, oldValue, newValue) {
@@ -1896,7 +1911,6 @@
                 const contentContainer = $('#checklist-content', this);
                 if (!contentContainer) return;
                 
-                // Preserve search value before re-rendering
                 const searchInput = $('#search-input', this);
                 const currentSearchQuery = searchInput ? searchInput.value : '';
 
@@ -1904,24 +1918,14 @@
                 
                 let allDevices = [...this.data.devices];
                 
-                    // Sorting logic
                 allDevices.sort((a, b) => {
                     const dir = this.sortState.dir === 'asc' ? 1 : -1;
                     const key = this.sortState.key;
-
-                    // Primary sort: by loop. Treats 'N/A' as a very large number to sort it after numbered loops.
                     const loopA = isNaN(parseInt(a.loop)) ? Infinity : parseInt(a.loop);
                     const loopB = isNaN(parseInt(b.loop)) ? Infinity : parseInt(b.loop);
-
-                    if (loopA !== loopB) {
-                        return (loopA - loopB) * dir;
-                    }
-
-                    // Secondary sort: by the selected key (address, messages, etc.)
+                    if (loopA !== loopB) return (loopA - loopB) * dir;
                     const valA = a[key];
                     const valB = b[key];
-
-                    // Handle numeric vs. string comparison for the secondary key
                     if (key === 'address' || key === 'serialNumber') {
                         const numA = parseInt(valA, 10) || 0;
                         const numB = parseInt(valB, 10) || 0;
@@ -1941,13 +1945,12 @@
                 
                 this.updateProgress();
 
-                // Restore search value and re-apply filter
                 const newSearchInput = $('#search-input', this);
                 if (newSearchInput && currentSearchQuery) {
                     newSearchInput.value = currentSearchQuery;
                     this.filterTable(currentSearchQuery);
                 } else {
-                     this.updateDeviceCounter(); // Update for initial view
+                     this.updateDeviceCounter();
                 }
             }
 
@@ -1984,12 +1987,12 @@
                            ${showHeader ? `
                             <thead class="text-xs text-slate-700 dark:text-slate-300 uppercase bg-slate-50 dark:bg-slate-800 hidden sm:table-header-group">
                                 <tr>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="loop" ${this.sortState.key === 'loop' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Loop ${this.getSortIcon('loop')}</th>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="address" ${this.sortState.key === 'address' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Address ${this.getSortIcon('address')}</th>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="messages" ${this.sortState.key === 'messages' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Location/Message ${this.getSortIcon('messages')}</th>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="deviceType" ${this.sortState.key === 'deviceType' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Type ${this.getSortIcon('deviceType')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="loop">Loop ${this.getSortIcon('loop')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="address">Address ${this.getSortIcon('address')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="messages">Location/Message ${this.getSortIcon('messages')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="deviceType">Type ${this.getSortIcon('deviceType')}</th>
                                     <th scope="col" class="p-3">Model/SKU</th>
-                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="serialNumber" ${this.sortState.key === 'serialNumber' ? `aria-sort="${this.sortState.dir === 'asc' ? 'ascending' : 'descending'}"` : ''}>Serial # ${this.getSortIcon('serialNumber')}</th>
+                                    <th scope="col" class="p-3 table-header-sortable cursor-pointer" data-sort-key="serialNumber">Serial # ${this.getSortIcon('serialNumber')}</th>
                                     <th scope="col" class="p-3 text-center">✅</th>
                                 </tr>
                             </thead>` : ''}
@@ -2030,10 +2033,6 @@
                                         <dd class="truncate col-span-1">${escapeHTML(device.serialNumber) || 'N/A'}</dd>
                                         <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Model/SKU:</dt>
                                         <dd class="truncate col-span-1">${escapeHTML(device.model) || 'N/A'}</dd>
-                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Sys. Address:</dt>
-                                        <dd class="col-span-1">${escapeHTML(device.systemAddress) || 'N/A'}</dd>
-                                        <dt class="font-medium text-slate-600 dark:text-slate-300 col-span-1">Type ID:</dt>
-                                        <dd class="col-span-1">${escapeHTML(device.deviceTypeID) || 'N/A'}</dd>
                                     </dl>
                                 </div>
                                 <div class="flex-shrink-0">
@@ -2057,7 +2056,6 @@
             }
 
             attachEventListeners() {
-                // Main event listener for clicks
                 this.addEventListener('click', (e) => {
                     const row = e.target.closest('.device-row');
                     const accordionToggle = e.target.closest('.accordion-toggle');
@@ -2068,7 +2066,7 @@
                         const isExpanded = accordionToggle.getAttribute('aria-expanded') === 'true';
                         accordionToggle.setAttribute('aria-expanded', String(!isExpanded));
                         if(content) content.classList.toggle('hidden');
-                        this.updateDeviceCounter(); // Update count on accordion toggle
+                        this.updateDeviceCounter();
                         return;
                     }
                     
@@ -2083,12 +2081,10 @@
                     }
                 });
                 
-                // Listener for search input
                 this.addEventListener('input', debounce((e) => {
                     if (e.target.id === 'search-input') this.filterTable(e.target.value);
                 }, 250));
 
-                // Listener for sort dropdown
                 this.addEventListener('change', this.handleSortChange);
             }
 
@@ -2134,7 +2130,7 @@
                 row.addEventListener('animationend', () => row.classList.remove('flash-bg'), { once: true });
 
                 this.saveInspectedState();
-                this.updateUI(); // This re-renders, preserving search
+                this.updateUI();
                 this.updateLastCheckedFooter();
             }
 
@@ -2167,6 +2163,11 @@
                     }
                 }
                 
+                if (action === 'import') {
+                    this.fileInput.click(); // Trigger the hidden file input
+                    return;
+                }
+
                 if (action === 'export') {
                     this.exportInspectedList();
                     return;
@@ -2183,12 +2184,13 @@
                     showToast('No inspected devices to export.', 'info');
                     return;
                 }
-                const data = JSON.stringify({
+                const dataToExport = {
                     checklistName: this.data.name,
                     exportDate: new Date().toISOString(),
                     inspectedCount: inspectedDevices.length,
                     devices: inspectedDevices
-                }, null, 2);
+                };
+                const data = JSON.stringify(dataToExport, null, 2);
                 const blob = new Blob([data], { type: 'application/json' });
                 const url = URL.createObjectURL(blob);
                 const a = document.createElement('a');
@@ -2201,20 +2203,67 @@
                 showToast('Exported inspected list as JSON.', 'success');
             }
             
+            handleFileImport(event) {
+                const file = event.target.files[0];
+                if (!file) return; // User cancelled the dialog
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const importedData = JSON.parse(e.target.result);
+                        
+                        // Validation
+                        if (!importedData.checklistName || !Array.isArray(importedData.devices)) {
+                            throw new Error("Invalid file format. Missing 'checklistName' or 'devices' properties.");
+                        }
+                        if (importedData.checklistName !== this.data.name) {
+                            throw new Error(`Checklist mismatch. Current is "${this.data.name}", but file is for "${importedData.checklistName}".`);
+                        }
+
+                        // Merge the imported data
+                        let newDevicesImported = 0;
+                        importedData.devices.forEach(device => {
+                            const normalizedDevice = normalizeDevice(device);
+                            const deviceId = this.getUniqueDeviceId(normalizedDevice);
+                            if (!this.state.checkedDevices.has(deviceId)) {
+                                this.state.checkedDevices.add(deviceId);
+                                newDevicesImported++;
+                            }
+                        });
+
+                        this.saveInspectedState();
+                        this.updateUI();
+                        this.updateLastCheckedFooter();
+                        showToast(`${newDevicesImported} new device states imported successfully! Total inspected: ${this.state.checkedDevices.size}.`, 'success');
+
+                    } catch (error) {
+                        showToast(`Import Failed: ${error.message}`, 'error');
+                        console.error("Import error:", error);
+                    } finally {
+                        // Reset file input to allow importing the same file again if needed
+                        event.target.value = '';
+                    }
+                };
+                reader.onerror = () => {
+                    showToast('Error reading the selected file.', 'error');
+                    event.target.value = '';
+                };
+                reader.readAsText(file);
+            }
+
             filterTable(query) {
                 const q = query.toLowerCase().trim();
                 $$('.device-row', this).forEach(row => {
                     if (!q) {
-                        // Reset display if query is empty
                          row.style.display = window.innerWidth >= 640 ? 'table-row' : 'block';
                         return;
                     }
                     const textContent = row.textContent.toLowerCase();
                     const shouldShow = textContent.includes(q);
                     
-                    if (window.innerWidth >= 640) { // Desktop
+                    if (window.innerWidth >= 640) {
                         row.style.display = shouldShow ? 'table-row' : 'none';
-                    } else { // Mobile
+                    } else {
                          row.style.display = shouldShow ? 'block' : 'none';
                     }
                 });
@@ -2227,10 +2276,8 @@
 
                 const visibleRows = Array.from($$('.device-row', this)).filter(row => {
                     const rowIsHiddenBySearch = row.style.display === 'none';
-                    
                     const completedList = row.closest('#completed-list');
                     const accordionIsCollapsed = completedList && completedList.classList.contains('hidden');
-                    
                     return !rowIsHiddenBySearch && !accordionIsCollapsed;
                 });
 
@@ -2247,7 +2294,6 @@
                 const lastCheckedText = $('#last-checked-text');
                 if (!footer || !lastCheckedContainer || !lastCheckedText) return;
 
-                // Make the entire footer bar visible as soon as a checklist is active
                 if (this.data) {
                     footer.classList.remove('hidden');
                 }
@@ -2269,13 +2315,11 @@
 
         // --- APP INITIALIZATION ---
         document.addEventListener('DOMContentLoaded', () => {
-            // Setup Building Pickers
             const mobilePickerContainer = $('#mobile-building-picker-container');
             const desktopPickerContainer = $('#desktop-building-picker-container');
             if (mobilePickerContainer) mobilePickerContainer.appendChild(document.createElement('building-picker'));
             if (desktopPickerContainer) desktopPickerContainer.appendChild(document.createElement('building-picker'));
             
-            // Handle Checklist Selection
             document.addEventListener('checklist-selected', (e) => {
                 const { key } = e.detail;
                 const workspaceContainer = $('#checklist-workspace');
@@ -2297,7 +2341,6 @@
             const menuButton = $('#menu-toggle-button');
             const menuDropdown = $('#menu-dropdown');
             
-            // Initially hide menu until a checklist is loaded
             menuContainer.classList.add('invisible', 'opacity-50');
             menuButton.disabled = true;
 
