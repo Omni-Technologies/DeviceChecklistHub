@@ -305,9 +305,6 @@ export const CHECKLISTS = [
       { loop: 2, address: 73, model: 'SIGA-OSD', deviceType: 'Optical Smoke Detector', serialNumber: '3953922672', messages: 'SMOKE 2ND FL ROOM 203 CLOSET' }
     ]
   }
-   // checklists.js
-export const CHECKLISTS = [
-  {
     key: "uw_health_1_s_park",
     name: "1 S Park Street - UW Health",
     location: "Fire Alarm Device Inspection",
