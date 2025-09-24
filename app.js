@@ -1,11 +1,4 @@
-// Dynamically load checklists with a cache-busting query param
-let CHECKLISTS = [];
-try {
-  ({ CHECKLISTS } = await import(`./checklists.js?v=${Date.now()}`));
-} catch (e) {
-  console.error('Failed to load checklists.js', e);
-  CHECKLISTS = [];
-}
+import { CHECKLISTS } from './checklists.js?v=2025-09-24';
 
 // --- UTILITIES ---
 const $ = (selector, parent = document) => parent.querySelector(selector);
