@@ -1291,5 +1291,6 @@ export const CHECKLISTS = [
   { loop: 5, address: 23, model: 'SIGA-OSD', deviceType: 'Optical Smoke Detector', serialNumber: '3952670314', messages: 'SMOKE 8TH FL UNIT 828 EAST BEDROOM' },
   { loop: 3, address: 312, model: 'SIGA-OSD', deviceType: 'Optical Smoke Detector', serialNumber: '3952668755', messages: 'SMOKE 5TH FL UNIT 502 WEST BEDROOM' },
   { loop: 4, address: 49, model: 'SIGA-OSD', deviceType: 'Optical Smoke Detector', serialNumber: '3952384020', messages: 'SMOKE 6TH FL UNIT 609 BED AREA' },
-]
-}
+    ]
+  }
+];
