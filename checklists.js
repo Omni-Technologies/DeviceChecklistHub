@@ -1687,7 +1687,95 @@ export const CHECKLISTS = [
     { loop: 0, address: 3, model: "Continuous", deviceType: "NAC", serialNumber: "", messages: "NAC 3" },
     { loop: 0, address: 4, model: "Continuous", deviceType: "NAC", serialNumber: "", messages: "NAC 4" }
   ]
-}
-]
+},
+   {
+  key: "hickory_hills_academy",
+  name: "Hickory Hills Academy",
+  location: "Fire Alarm Device Inspection",
+  devices: [
+    // Loop 1 - Detectors
+    { loop: 1, address: 1, model: "HFS", deviceType: "Heat", serialNumber: "3621679440", messages: "LOWER LEVEL HEAT GYM NORTH" },
+    { loop: 1, address: 5, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947080746", messages: "TOP OF SHAFT ELEVATOR UNSAFE" },
+    { loop: 1, address: 6, model: "HFS", deviceType: "Heat", serialNumber: "3622707968", messages: "TOP OF SHAFT ELEVATOR UNSAFE" },
+    { loop: 1, address: 8, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085390", messages: "LL TEACHERS LOUNGE ELEVATOR UNSAFE" },
+    { loop: 1, address: 9, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947062032", messages: "1ST FLR SMOKE RECEPTION DESK" },
+    { loop: 1, address: 10, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947080753", messages: "1ST FLR SMOKE LOBBY 1/1" },
+    { loop: 1, address: 11, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947082320", messages: "1ST FLR SMOKE LOBBY 2/4" },
+    { loop: 1, address: 12, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084935", messages: "1ST FLR SMOKE LOBBY 3/4" },
+    { loop: 1, address: 13, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085598", messages: "1ST FLR SMOKE VESTIBULE #216" },
+    { loop: 1, address: 14, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084546", messages: "1ST FLR SMOKE LOBBY 4/4" },
+    { loop: 1, address: 15, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084973", messages: "1ST FLR SMOKE TOP OF STAIRWELL" },
+    { loop: 1, address: 16, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085840", messages: "1ST FLR SMOKE OUTSIDE ELEVATOR" },
+    { loop: 1, address: 17, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085000", messages: "1ST FLR SMOKE OUTSIDE BATHROOMS" },
+    { loop: 1, address: 18, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084584", messages: "1ST FLR SMOKE HALL 220 AT SPLIT" },
+    { loop: 1, address: 19, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085925", messages: "1ST FLR SMOKE OUTSIDE RM #242" },
+    { loop: 1, address: 20, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084690", messages: "1ST FLR SMOKE OUTSIDE STAIRWELL B" },
+    { loop: 1, address: 21, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084980", messages: "1ST FLR SMOKE OUTSIDE RM #247" },
+    { loop: 1, address: 22, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085338", messages: "1ST FLR SMOKE OUTSIDE RM #245" },
+    { loop: 1, address: 23, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947081477", messages: "1ST FLR SMOKE OUTSIDE RM #243" },
+    { loop: 1, address: 24, model: "HFS", deviceType: "Heat", serialNumber: "3622707906", messages: "LOWER LEVEL HEAT NORTH / WEST GYM" },
+    { loop: 1, address: 26, model: "HFS", deviceType: "Heat", serialNumber: "3621679648", messages: "LOWER LEVEL HEAT NORTH / EAST GYM" },
+    { loop: 1, address: 27, model: "HFS", deviceType: "Heat", serialNumber: "3622706251", messages: "LOWER LEVEL HEAT SOUTH / WEST GYM" },
+    { loop: 1, address: 28, model: "HFS", deviceType: "Heat", serialNumber: "3622706473", messages: "LOWER LEVEL HEAT SOUTH GYM" },
+    { loop: 1, address: 29, model: "HFS", deviceType: "Heat", serialNumber: "3621679754", messages: "LOWER LEVEL HEAT SOUTH / EAST GYM" },
+    { loop: 1, address: 30, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085468", messages: "LOWER LEVEL SMOKE GYM ENTRANCE" },
+    { loop: 1, address: 31, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085895", messages: "LOWER LEVEL SMOKE OUTSIDE RM 140" },
+    { loop: 1, address: 32, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947081408", messages: "LOWER LEVEL SMOKE OUTSIDE RM 144" },
+    { loop: 1, address: 33, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085864", messages: "LOWER LEVEL SMOKE OUTSIDE STAIRWELL B" },
+    { loop: 1, address: 34, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947080845", messages: "1ST FLR SMOKE CONSERVATORY EXIT" },
+    { loop: 1, address: 35, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085543", messages: "1ST FLR SMOKE HALLWAY 220" },
+    { loop: 1, address: 36, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3908585785", messages: "1ST FLR DUCT #4 RTU4 KITCHEN AREA 1/2" },
+    { loop: 1, address: 37, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3912299593", messages: "1ST FLR DUCT #6 RTU6 KITCHEN AREA 2/2" },
+    { loop: 1, address: 38, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3915805548", messages: "1ST FLR DUCT #1 RTU4 LOBBY 1/2" },
+    { loop: 1, address: 39, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3915805661", messages: "1ST FLR DUCT #3 RTU3 BY STAIRWELL" },
+    { loop: 1, address: 40, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3913452140", messages: "1ST FLR DUCT #5 RTU5 OUTSIDE ELEVATOR" },
+    { loop: 1, address: 41, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3913446170", messages: "1ST FLR DUCT #2 RTU2 OUTSIDE RM #245" },
+    { loop: 1, address: 42, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3949077638", messages: "1ST FLR DUCT #8 RTU1 G1 COPY RM #134" },
+    { loop: 1, address: 43, model: "SD", deviceType: "Duct Supervisory Non-Latching", serialNumber: "3913443537", messages: "1ST FLR DUCT #7 RTU7 OUTSIDE RM #247" },
+    { loop: 1, address: 44, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085444", messages: "LOWER LEVEL SMOKE OUTSIDE EXCERCISE RM" },
+    { loop: 1, address: 45, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947061769", messages: "1ST FLR SMOKE OUTSIDE NURSE 206" },
+    { loop: 1, address: 46, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947080142", messages: "LOWER LEVEL SMOKE OUTSIDE #145" },
+    { loop: 1, address: 47, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084515", messages: "LOWER LEVEL SMOKE OUTSIDE RM #143" },
+    { loop: 1, address: 48, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084829", messages: "LOWER LEVEL SMOKE OUTSIDE RM #141" },
+    { loop: 1, address: 49, model: "HFS", deviceType: "Heat", serialNumber: "3621683843", messages: "LOWER LEVEL HEAT SCIENCE ROOM" },
+    { loop: 1, address: 50, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085611", messages: "LOWER LEVEL SMOKE STAIR A WEST SMOKE" },
+    { loop: 1, address: 51, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084522", messages: "LOWER LEVEL SMOKE STAIR A EAST SMOKE" },
+    { loop: 1, address: 52, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084911", messages: "LOWER LEVEL SMOKE OUTSIDE ELEVATOR" },
+    { loop: 1, address: 53, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947085208", messages: "LOWER LEVEL SMOKE EAST OF ELEVATOR" },
+    { loop: 1, address: 54, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947084607", messages: "LL FLR MECH RM SMOKE ABOVE FACP" },
+    { loop: 1, address: 57, model: "PS", deviceType: "Smoke Verified", serialNumber: "3947080678", messages: "1ST FLOOR SMOKE CORR 230 OUTSIDE RM#248" },
+
+    // Loop 1 - Modules (includes Pull Stations, Relays, Monitor/Inputs, etc.)
+    { loop: 1, address: 126, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5226803749", messages: "LL TEACHERS LOUNGE MAIN RECALL" },
+    { loop: 1, address: 127, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224262340", messages: "LL TEACHERS LOUNGE HAT" },
+    { loop: 1, address: 128, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224262654", messages: "LL TEACHERS LOUNGE ELEV SHUNT TRIP" },
+    { loop: 1, address: 129, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5225019035", messages: "LL TEACHERS LOUNGE ALTERNATE RECALL" },
+    { loop: 1, address: 130, model: "278", deviceType: "Pull Station", serialNumber: "4890912092", messages: "LL MECH ROOM PULL BY MECHANICAL EXIT" },
+    { loop: 1, address: 131, model: "CT1", deviceType: "Supervisory Non-Latching", serialNumber: "4804020431", messages: "LL TEACHERS LOUNGE ELEV POWER LOSS" },
+    { loop: 1, address: 132, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5225015372", messages: "LOWER LEVEL RELAY A/V SYSTEM SHUTDOWN" },
+    { loop: 1, address: 133, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5226803763", messages: "1ST FLR SHUTDOWN LOBBY FAN SHUTDOWN" },
+    { loop: 1, address: 134, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224248443", messages: "1ST FLR DUCT #7 SHUTDOWN RTU#7" },
+    { loop: 1, address: 135, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224262661", messages: "1ST FLR SHUTDOWN LOBBY FAN SHUTDOWN" },
+
+    // NOTE: Address 158/160/162 are marked NOT USED in the report; included here as-is for config parity.
+    { loop: 1, address: 158, model: "CT2", deviceType: "Supervisory Non-Latching", serialNumber: "4924737004", messages: "NOT USED" },
+    { loop: 1, address: 159, model: "CT2", deviceType: "Supervisory Non-Latching", serialNumber: "4924737011", messages: "TAMPER LL MECH RM BEFORE BACKFLOW" },
+    { loop: 1, address: 160, model: "CT2", deviceType: "Supervisory Non-Latching", serialNumber: "4924874167", messages: "NOT USED" },
+    { loop: 1, address: 161, model: "CT2", deviceType: "Supervisory Non-Latching", serialNumber: "4924874174", messages: "TAMPER LL MECH RM AFTER BACKFLOW" },
+    { loop: 1, address: 162, model: "CT2", deviceType: "Supervisory Non-Latching", serialNumber: "4924867688", messages: "NOT USED" },
+    { loop: 1, address: 163, model: "CT2", deviceType: "Water Flow NoDelay", serialNumber: "4924867695", messages: "LL MECH RM PRE- WATERFLOW" },
+    { loop: 1, address: 164, model: "CC1S", deviceType: "Genesis Audible Visible Silence", serialNumber: "5066133761", messages: "LOWER LEVEL MECH CC1 AMP TRIGGER" },
+    { loop: 1, address: 165, model: "CT1", deviceType: "Alarm", serialNumber: "4805614929", messages: "1ST FLR KITCHEN HOOD" },
+    { loop: 1, address: 166, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224248788", messages: "RTU #4 SHUTDOWN" },
+    { loop: 1, address: 167, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224262913", messages: "RTU #6 SHUTDOWN" },
+    { loop: 1, address: 168, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5225019639", messages: "1ST FLR SHUTDOWN LOBBY FAN SHUTDOWN" },
+    { loop: 1, address: 169, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5226805859", messages: "RTU #3 SHUTDOWN" },
+    { loop: 1, address: 170, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5225019042", messages: "RTU #5 SHUTDOWN" },
+    { loop: 1, address: 171, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224262852", messages: "RTU #2 SHUTDOWN" },
+    { loop: 1, address: 172, model: "CR", deviceType: "Relay Non-Silenceable", serialNumber: "5224248290", messages: "RTU #1 SHUTDOWN" }
+  ]
+ }
+];
+
 
 
