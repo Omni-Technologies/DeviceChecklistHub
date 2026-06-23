@@ -2234,7 +2234,7 @@ export const CHECKLISTS = [
 },
 {
   key: "urban_land_interest_monroest",
-  name: "Urban Land Interest Monroest",
+  name: "Urban Land Interest 1720 Monroe St",
   location: "Fire Alarm Device Inspection",
   devices: [
     { loop: 1, address: 1, model: 'PS', deviceType: 'Smoke Verified', serialNumber: '3942533834', messages: 'SMOKE 1ST FLOOR ELECTRICAL 113' },
